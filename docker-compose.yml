@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: ghcr.io/aba-problem/aba-frontend:latest
+    container_name: aba_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
