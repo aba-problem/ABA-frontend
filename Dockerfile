@@ -6,11 +6,11 @@ WORKDIR /app
 
 COPY public/package*.json ./
 
-RUN public/npm install
+RUN npm install
 
 COPY . .
 
-RUN public/npm run build
+RUN npm run build
 
 # Etapa 2: Producción
 
