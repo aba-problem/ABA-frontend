@@ -1,8 +1,9 @@
-name: Deploy Frontend
+name: Deploy ABA Frontend
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -10,19 +11,24 @@ permissions:
 
 jobs:
   deploy:
+    name: Build, Push & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1. Clonar repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Login GHCR
+      # 2. Login en GHCR
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build y Push
+      # 3. Construir y publicar imagen
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -31,13 +37,59 @@ jobs:
             ghcr.io/aba-problem/aba-frontend:latest
             ghcr.io/aba-problem/aba-frontend:${{ github.sha }}
 
-      - name: Configurar SSH
+      # 4. Desplegar al VPS
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
+
+            echo "========================================"
+            echo "Login en GHCR"
+            echo "========================================"
+
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io \
+              -u "${{ secrets.GHCR_USERNAME }}" \
+              --password-stdin
+
+            echo "========================================"
+            echo "Ir al proyecto"
+            echo "========================================"
+
             cd /opt/aba-frontend
+
+            pwd
+            ls -lah
+
+            echo "========================================"
+            echo "Docker Compose Version"
+            echo "========================================"
+
+            docker compose version
+
+            echo "========================================"
+            echo "Descargando imagen"
+            echo "========================================"
+
             docker compose pull
+
+            echo "========================================"
+            echo "Levantando contenedor"
+            echo "========================================"
+
             docker compose up -d
+
+            echo "========================================"
+            echo "Contenedores"
+            echo "========================================"
+
+            docker ps
+
+            echo "========================================"
+            echo "Limpieza"
+            echo "========================================"
+
+            docker image prune -f
