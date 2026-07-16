@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+/* ─── ABA Design System Tokens ─────────────────────────────────────── */
+
+@theme inline {
+  /* Breakpoints — matches standard Tailwind (sm 640, md 768, lg 1024, xl 1280, 2xl 1536) */
+  --breakpoint-sm:  640px;
+  --breakpoint-md:  768px;
+  --breakpoint-lg:  1024px;
+  --breakpoint-xl:  1280px;
+  --breakpoint-2xl: 1440px;
+
+  /* Primitive Colors */
+  --color-aba-bg:           #09090B;
+  --color-aba-bg-secondary: #111217;
+  --color-aba-card:         #18181B;
+  --color-aba-card-hover:   #1C1C1F;
+  --color-aba-border:       #2B2D31;
+  --color-aba-border-subtle:#1F2024;
+
+  /* Brand Blue */
+  --color-aba-blue-400:     #60A5FA;
+  --color-aba-blue-500:     #3B82F6;
+  --color-aba-blue-600:     #2563EB;
+  --color-aba-blue-700:     #1D4ED8;
+  --color-aba-blue-muted:   #1E2D4A;
+
+  /* Semantic */
+  --color-aba-success:      #22C55E;
+  --color-aba-success-muted:#14291E;
+  --color-aba-warning:      #EAB308;
+  --color-aba-warning-muted:#2A2008;
+  --color-aba-danger:       #EF4444;
+  --color-aba-danger-muted: #2A1010;
+  --color-aba-info:         #3B82F6;
+  --color-aba-info-muted:   #1E2D4A;
+
+  /* Typography */
+  --color-aba-text:         #F5F5F5;
+  --color-aba-text-secondary:#A1A1AA;
+  --color-aba-text-muted:   #71717A;
+  --color-aba-text-disabled:#52525B;
+
+  /* Interactive */
+  --color-aba-focus-ring:   rgba(59,130,246,0.5);
+
+  /* Font Families */
+  --font-sans:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:   'JetBrains Mono', 'Cascadia Code', monospace;
+
+  /* Radius Tokens */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* Elevation / Shadow */
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.4);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:   0 10px 15px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.3);
+  --shadow-xl:   0 20px 25px rgba(0,0,0,0.6), 0 10px 10px rgba(0,0,0,0.2);
+  --shadow-glow: 0 0 0 3px var(--color-aba-focus-ring);
+
+  /* Spacing (base-4 scale) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Responsive Typography Scale */
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   16px;
+  --text-xl:   18px;
+  --text-2xl:  22px;
+  --text-3xl:  28px;
+  --text-4xl:  36px;
+  --text-5xl:  48px;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent layout shift from scrollbar */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: #09090B;
+  color: #F5F5F5;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Full height including dynamic viewport (mobile address bar) */
+  min-height: 100dvh;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2B2D31; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #3F4146; }
+
+/* ─── Global Focus ───────────────────────────────────────────────── */
+/* Suppress default outline; rely on focus-visible utilities */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background: rgba(59,130,246,0.25);
+  color: #F5F5F5;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Responsive container helper ───────────────────────────────── */
+.aba-page {
+  padding: 16px;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+@media (min-width: 640px) { .aba-page { padding: 24px; } }
+@media (min-width: 1024px) { .aba-page { padding: 32px; } }
+
+/* ─── Responsive table scroll wrapper ───────────────────────────── */
+.aba-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Skeleton shimmer ───────────────────────────────────────────── */
+@keyframes aba-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.aba-skeleton {
+  background: linear-gradient(90deg, #1F2024 25%, #27272A 50%, #1F2024 75%);
+  background-size: 800px 100%;
+  animation: aba-shimmer 1.5s infinite linear;
+}
+
+/* ─── Fade-in / slide-up entrance ───────────────────────────────── */
+@keyframes aba-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aba-fade-up { animation: aba-fade-up 0.25s ease-out both; }
+
+/* ─── Page transition ────────────────────────────────────────────── */
+@keyframes aba-page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aba-page-transition {
+  animation: aba-page-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Modal enter/exit ───────────────────────────────────────────── */
+@keyframes aba-modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes aba-modal-panel-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.aba-modal-backdrop { animation: aba-modal-backdrop-in 0.18s ease both; }
+.aba-modal-panel    { animation: aba-modal-panel-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Dropdown enter ─────────────────────────────────────────────── */
+@keyframes aba-dropdown-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.aba-dropdown { animation: aba-dropdown-in 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Sidebar slide ──────────────────────────────────────────────── */
+@keyframes aba-slide-in {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.aba-slide-in { animation: aba-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Toast slide in ─────────────────────────────────────────────── */
+@keyframes aba-toast-in {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.aba-toast-in { animation: aba-toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Spinner ────────────────────────────────────────────────────── */
+@keyframes aba-spin {
+  to { transform: rotate(360deg); }
+}
+.aba-spin { animation: aba-spin 0.8s linear infinite; }
+
+/* ─── Pulse dot ──────────────────────────────────────────────────── */
+@keyframes aba-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+.aba-pulse-dot { animation: aba-pulse-dot 1.5s ease-in-out infinite; }
+
+/* ─── Count-up number ────────────────────────────────────────────── */
+@keyframes aba-count-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aba-count-up { animation: aba-count-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Utilities ──────────────────────────────────────────────────── */
+.aba-transition { transition: all 150ms ease; }
+.aba-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* ─── Sidebar collapse width transition ──────────────────────────── */
+.aba-sidebar { transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.aba-sidebar-label { transition: opacity 0.15s ease, width 0.15s ease; }
+
+/* ─── Touch target minimum ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  button, [role="button"], a, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+  }
+  /* Override for inline/dense UI contexts */
+  .touch-dense button,
+  .touch-dense [role="button"] {
+    min-height: unset;
+  }
+}
