@@ -4,13 +4,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY public/package*.json ./
 
-RUN npm install
+RUN public/npm install
 
 COPY . .
 
-RUN npm run build
+RUN public/npm run build
 
 # Etapa 2: Producción
 
