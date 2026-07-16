@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY public/package*.json ./
+COPY package*.json ./
 
 RUN npm install
 
