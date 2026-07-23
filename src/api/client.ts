@@ -39,8 +39,18 @@ import type { ApiError, ApiResult } from './types'
 
 // ─── Configuration ─────────────────────────────────────────────────────────
 
-/** Base URL for the ABA backend API. All requests go through this origin. */
-const API_BASE = 'https://api.aba.andrescortes.dev'
+/**
+ * Base URL for the ABA backend API.
+ *
+ * In development (Vite), reads from `VITE_API_URL` environment variable.
+ * Falls back to the production API URL if not set.
+ *
+ * Configure in `.env` at the frontend root:
+ * ```
+ * VITE_API_URL=http://localhost:8080
+ * ```
+ */
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.aba.andrescortes.dev'
 
 // ─── CSRF Token Management ─────────────────────────────────────────────────
 

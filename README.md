@@ -81,11 +81,21 @@ src/
 
 ## Backend
 
-El frontend se conecta a la API en `https://api.aba.andrescortes.dev`.
+El frontend se conecta a la API. En producción es `https://api.aba.andrescortes.dev`, en desarrollo local es `http://localhost:8080`.
+
+### Configurar API URL local
+
+Copia el archivo de ejemplo y ajusta la URL:
+
+```bash
+cp .env.example .env
+# Editar .env y poner:
+# VITE_API_URL=http://localhost:8080
+```
 
 ### CORS
 
-Para desarrollo local, el backend debe tener whitelisted `http://localhost:5173`. Si no lo está, verás errores de CORS en la consola del navegador.
+El backend local ya tiene CORS configurado para `http://localhost:5173`.
 
 ### Autenticación
 
@@ -108,3 +118,54 @@ Para desarrollo local, el backend debe tener whitelisted `http://localhost:5173`
 | `npm run dev` | Servidor de desarrollo con hot reload |
 | `npm run build` | Build de producción |
 | `npm run preview` | Preview del build de producción |
+
+## Desarrollo Local (Frontend + Backend)
+
+Para probar todo integrado necesitas levantar el backend localmente:
+
+### 1. Levantar el backend (desde `ABA-backend/`)
+
+```bash
+# Opción A: Script automático
+./setup-local.sh
+
+# Opción B: Manual
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Esto levanta:
+- **SQL Server** en `localhost:14330` (usuario: `sa`, contraseña: `Dev!Pass12345`)
+- **MySQL** en `localhost:3307` (usuario: `root`, contraseña: `DevRoot12345`)
+- **Backend** en `http://localhost:8080` (vía Nginx)
+- **Swagger** en `http://localhost:8080/swagger`
+
+### 2. Configurar el frontend
+
+```bash
+cd ABA-frontend
+cp .env.example .env
+# Editar .env: VITE_API_URL=http://localhost:8080
+npm install
+npm run dev
+```
+
+### 3. Abrir en el navegador
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger`
+
+### Credenciales de desarrollo
+
+| Servicio | Host | Puerto | Usuario | Contraseña |
+|----------|------|--------|---------|------------|
+| SQL Server | localhost | 14330 | sa | Dev!Pass12345 |
+| MySQL | localhost | 3307 | root | DevRoot12345 |
+| MySQL (provisioner) | localhost | 3307 | aba_provisioner | DevProvisioner123! |
+
+### Detener el backend
+
+```bash
+docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml down -v  # limpiar volúmenes
+```
