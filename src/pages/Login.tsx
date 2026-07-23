@@ -1,27 +1,72 @@
 /**
  * @module pages/Login
- * @description OAuth login page.
+ * @description OAuth login page with optional Turnstile CAPTCHA challenge.
  *
  * Renders a centered card with Google and GitHub OAuth buttons.
- * Each button triggers a full browser redirect to the backend OAuth
- * endpoint (via {@link loginWithGoogle} / {@link loginWithGithub}).
- * On success the backend redirects to `/auth/success`, which confirms
- * the session and navigates to `/dashboard`.
+ * Each button probes the backend login endpoint first to detect:
+ * - **302 redirect** → proceeds with full browser navigation to the OAuth provider
+ * - **400 CAPTCHA_REQUERIDO** → shows the Turnstile challenge overlay
+ * - **429 rate limit** → shows rate limit message with retry timer
  *
- * If the user is already authenticated (`status === 'authenticated'`),
- * {@link ProtectedRoute} in `App.tsx` redirects them away from this page.
+ * After the Turnstile is solved, the login is retried with the token
+ * as a query parameter: `?captchaToken=<token>`.
  *
- * @see api/auth.ts — OAuth redirect functions
+ * @see api/auth.ts — probeLogin() for the fetch-based login flow
+ * @see components/TurnstileChallenge.tsx — The CAPTCHA overlay
  * @see pages/auth/AuthSuccess.tsx — Post-redirect session confirmation
- * @see contexts/AuthContext.tsx — Session state management
  */
 
+import { useState, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { loginWithGoogle, loginWithGithub } from '../api/auth'
+import TurnstileChallenge from '../components/TurnstileChallenge'
 import { Database, ArrowRight } from 'lucide-react'
+
+type Provider = 'google' | 'github'
 
 export default function Login() {
   const { status } = useAuth()
+
+  const [captchaRequired, setCaptchaRequired] = useState(false)
+  const [pendingProvider, setPendingProvider] = useState<Provider | null>(null)
+  const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null)
+
+  const handleLogin = useCallback(async (provider: Provider, captchaToken?: string) => {
+    setRateLimitMsg(null)
+
+    const loginFn = provider === 'google' ? loginWithGoogle : loginWithGithub
+    const result = await loginFn(captchaToken)
+
+    if (result.ok) {
+      // 302 → redirect to OAuth provider
+      window.location.href = result.redirectUrl
+      return
+    }
+
+    // Handle errors
+    if (result.error.error === 'CAPTCHA_REQUERIDO') {
+      setPendingProvider(provider)
+      setCaptchaRequired(true)
+    } else if (result.status === 429) {
+      setRateLimitMsg(result.error.error)
+    } else {
+      // Generic error — redirect to /auth/error
+      window.location.href = `/auth/error?reason=${encodeURIComponent(result.error.error)}`
+    }
+  }, [])
+
+  const handleCaptchaToken = useCallback(async (token: string) => {
+    setCaptchaRequired(false)
+    if (pendingProvider) {
+      await handleLogin(pendingProvider, token)
+      setPendingProvider(null)
+    }
+  }, [pendingProvider, handleLogin])
+
+  const handleCaptchaDismiss = useCallback(() => {
+    setCaptchaRequired(false)
+    setPendingProvider(null)
+  }, [])
 
   if (status === 'loading') {
     return (
@@ -55,7 +100,7 @@ export default function Login() {
 
           <div className="space-y-3">
             <button
-              onClick={loginWithGoogle}
+              onClick={() => handleLogin('google')}
               className="w-full flex items-center justify-center gap-3 h-11 px-5 rounded-[10px] border border-[#2B2D31] bg-[#18181B] text-[14px] font-medium text-[#F5F5F5] hover:bg-[#1C1C1F] hover:border-[#3F4146] transition-all duration-150 cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -69,7 +114,7 @@ export default function Login() {
             </button>
 
             <button
-              onClick={loginWithGithub}
+              onClick={() => handleLogin('github')}
               className="w-full flex items-center justify-center gap-3 h-11 px-5 rounded-[10px] border border-[#2B2D31] bg-[#18181B] text-[14px] font-medium text-[#F5F5F5] hover:bg-[#1C1C1F] hover:border-[#3F4146] transition-all duration-150 cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#F5F5F5">
@@ -79,12 +124,27 @@ export default function Login() {
               <ArrowRight size={14} className="ml-auto text-[#52525B]" />
             </button>
           </div>
+
+          {/* Rate limit warning */}
+          {rateLimitMsg && (
+            <div className="mt-4 rounded-[8px] bg-[#2A1C0A] border border-[#78350F] p-3 text-center">
+              <p className="text-[13px] text-[#F59E0B]">{rateLimitMsg}</p>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-[12px] text-[#52525B] mt-6">
           Free SQL databases for students and developers
         </p>
       </div>
+
+      {/* Turnstile CAPTCHA challenge overlay */}
+      {captchaRequired && (
+        <TurnstileChallenge
+          onToken={handleCaptchaToken}
+          onDismiss={handleCaptchaDismiss}
+        />
+      )}
     </div>
   )
 }

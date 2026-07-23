@@ -50,7 +50,7 @@ import type { ApiError, ApiResult } from './types'
  * VITE_API_URL=http://localhost:8080
  * ```
  */
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.aba.andrescortes.dev'
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://api.aba.andrescortes.dev'
 
 // ─── CSRF Token Management ─────────────────────────────────────────────────
 

@@ -6,44 +6,138 @@
  *
  * ABA uses OAuth2 (Google/GitHub) for authentication. The flow is:
  *
- * 1. Frontend redirects the browser to `api.aba.andrescortes.dev/auth/{provider}/login`
- * 2. The user authorizes with the provider (Google/GitHub)
- * 3. The provider redirects back to the backend's callback URL
- * 4. The backend validates, creates/updates the user, and sets HttpOnly cookies
- * 5. The backend redirects to `aba.andrescortes.dev/auth/success`
- * 6. The frontend's `/auth/success` page confirms the session via `POST /auth/refresh`
+ * 1. Frontend probes the login endpoint via `fetch()` with `redirect: 'manual'`
+ * 2. If the backend returns a redirect (opaque) → proceed with `window.location.href`
+ * 3. If the backend returns 400 `CAPTCHA_REQUERIDO` → show Turnstile widget
+ * 4. After Turnstile solves, retry with `?captchaToken=<token>`
+ * 5. On success, the full redirect flow completes: provider → backend → /auth/success
  *
- * **Why `window.location.href`?** OAuth2 requires a full browser navigation to the
- * provider's authorization page — it can't be done via `fetch()` or `XMLHttpRequest`.
+ * **Why `fetch` with `redirect: 'manual'`?**
+ * The login endpoints (`/auth/{provider}/login`) are navigation endpoints that return
+ * 302 redirects to the OAuth provider. We need to detect `CAPTCHA_REQUERIDO` (400)
+ * BEFORE the browser navigates away. Using `window.location.href` directly would lose
+ * the response body and show an ugly nginx error page.
+ *
+ * **Opaque redirect handling:**
+ * With `redirect: 'manual'`, a 302 response becomes `type: 'opaqueredirect'` with
+ * `status: 0` — we can't read the Location header. But we already know the URL we
+ * probed, so we just navigate to it. The second request follows the same path.
  *
  * @see message.txt — Section 2 (Flujo de login)
  */
 
-import { apiPost, fetchCsrf } from './client'
+import { apiPost, fetchCsrf, API_BASE } from './client'
+import type { ApiError } from './types'
+
+// ─── Types ─────────────────────────────────────────────────────────────────
+
+/**
+ * Result of probing a login endpoint.
+ *
+ * - `ok: true` with `redirectUrl` — proceed with `window.location.href = redirectUrl`
+ * - `ok: false` with `CAPTCHA_REQUERIDO` — show Turnstile challenge
+ * - `ok: false` with other error — show error message
+ */
+export type LoginResult =
+  | { ok: true; redirectUrl: string }
+  | { ok: false; error: ApiError; status: number }
 
 // ─── OAuth Login ───────────────────────────────────────────────────────────
 
 /**
+ * Probes the backend login endpoint without triggering a browser redirect.
+ *
+ * Uses `fetch()` with `redirect: 'manual'` to detect:
+ * - **Opaque redirect (302)**: Login can proceed — returns the probed URL
+ * - **400 CAPTCHA_REQUERIDO**: Too many attempts — Turnstile challenge needed
+ * - **429 Too Many Requests**: Rate limited — returns Retry-After
+ *
+ * When the result is `ok: true`, the caller should use `window.location.href`
+ * to navigate to the `redirectUrl` (the same URL we probed). This triggers a
+ * second request that the backend handles normally (302 → OAuth provider).
+ *
+ * @param provider - 'google' or 'github'
+ * @param captchaToken - Optional Turnstile token (passed as query param on retry)
+ * @returns Login result with redirect URL or error
+ */
+async function probeLogin(provider: 'google' | 'github', captchaToken?: string): Promise<LoginResult> {
+  const url = new URL(`${API_BASE}/auth/${provider}/login`)
+  if (captchaToken) {
+    url.searchParams.set('captchaToken', captchaToken)
+  }
+
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    redirect: 'manual', // Don't follow — we need to inspect the response
+    credentials: 'include',
+  })
+
+  // Opaque redirect = backend returned 302 to the OAuth provider.
+  // We can't read the Location header (opaque), but we know the URL we probed.
+  // Just navigate there — the browser will follow the redirect on the second request.
+  if (res.type === 'opaqueredirect') {
+    return { ok: true, redirectUrl: url.toString() }
+  }
+
+  // 429 Too Many Requests → rate limited
+  if (res.status === 429) {
+    const retryAfter = res.headers.get('Retry-After')
+    return {
+      ok: false,
+      error: { error: retryAfter ? `Demasiados intentos. Reintenta en ${retryAfter}s.` : 'Demasiados intentos.' },
+      status: 429,
+    }
+  }
+
+  // 400 CAPTCHA_REQUERIDO or other errors
+  if (res.status >= 400) {
+    try {
+      const json = await res.json()
+      return {
+        ok: false,
+        error: { error: (json.error as string) || 'Error de autenticación.' },
+        status: res.status,
+      }
+    } catch {
+      return {
+        ok: false,
+        error: { error: 'Error de autenticación.' },
+        status: res.status,
+      }
+    }
+  }
+
+  // Unexpected response — treat as error
+  return {
+    ok: false,
+    error: { error: 'Respuesta inesperada del servidor.' },
+    status: res.status,
+  }
+}
+
+/**
  * Initiates the Google OAuth2 login flow.
  *
- * Redirects the browser to Google's authorization page. The backend handles
- * the callback at `/auth/google/callback`, validates the tokens, creates
- * the user if needed, sets session cookies, and redirects to `/auth/success`.
+ * Probes the endpoint first to detect CAPTCHA requirements.
+ * On success, redirects the browser to Google's authorization page.
  *
- * **This is a full page navigation, not an AJAX call.**
+ * @param captchaToken - Optional Turnstile token for retry after CAPTCHA challenge
+ * @returns Login result
  */
-export function loginWithGoogle() {
-  window.location.href = 'https://api.aba.andrescortes.dev/auth/google/login'
+export function loginWithGoogle(captchaToken?: string): Promise<LoginResult> {
+  return probeLogin('google', captchaToken)
 }
 
 /**
  * Initiates the GitHub OAuth2 login flow.
  *
  * Same flow as Google but via GitHub's authorization endpoint.
- * The backend handles the callback at `/auth/github/callback`.
+ *
+ * @param captchaToken - Optional Turnstile token for retry after CAPTCHA challenge
+ * @returns Login result
  */
-export function loginWithGithub() {
-  window.location.href = 'https://api.aba.andrescortes.dev/auth/github/login'
+export function loginWithGithub(captchaToken?: string): Promise<LoginResult> {
+  return probeLogin('github', captchaToken)
 }
 
 // ─── Session Management ────────────────────────────────────────────────────
