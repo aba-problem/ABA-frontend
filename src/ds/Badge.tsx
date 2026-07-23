@@ -1,6 +1,35 @@
+/**
+ * @module ds/Badge
+ * @description ABA Design System badge and status indicator components.
+ *
+ * Provides two exported components:
+ * - {@link Badge} — Inline label with background color, border, and optional dot
+ * - {@link StatusDot} — Standalone colored dot with optional pulse animation
+ *
+ * Both use a shared `BadgeVariant` type for consistent color mapping
+ * across the design system. Badges are used for:
+ * - Database engine labels (`primary` for PostgreSQL, `info` for MySQL)
+ * - Status indicators (ACTIVA, PAUSADA, etc.)
+ * - Navigation pills ("Now in public beta")
+ * - Rate limit warnings
+ *
+ * @example
+ * ```tsx
+ * <Badge variant="primary" dot size="sm">PostgreSQL</Badge>
+ * <Badge variant="success" size="md">Active</Badge>
+ * <StatusDot variant="success" pulse />
+ * ```
+ *
+ * @see instrucciones_de_diseño0.md — Color system reference
+ */
+
+/** Available badge color variants. */
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'outline'
+
+/** Available badge size presets. */
 export type BadgeSize = 'xs' | 'sm' | 'md'
 
+/** Props for the Badge component. */
 interface BadgeProps {
   variant?: BadgeVariant
   size?: BadgeSize
@@ -53,7 +82,20 @@ export function Badge({ variant = 'default', size = 'sm', dot = false, children,
   )
 }
 
-/* Status Indicator (dot only, no label) */
+/**
+ * Standalone status indicator dot.
+ *
+ * Renders a small colored circle with optional ping animation.
+ * Used in database cards and lists to show real-time status without
+ * requiring a text label.
+ *
+ * @example
+ * ```tsx
+ * <StatusDot variant="success" pulse />
+ * <StatusDot variant="warning" />
+ * <StatusDot variant="danger" />
+ * ```
+ */
 export function StatusDot({ variant = 'default', pulse = false }: { variant?: BadgeVariant; pulse?: boolean }) {
   return (
     <span className="relative inline-flex">

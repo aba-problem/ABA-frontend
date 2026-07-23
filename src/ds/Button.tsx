@@ -1,9 +1,43 @@
+/**
+ * @module ds/Button
+ * @description ABA Design System button components.
+ *
+ * Provides two exported components:
+ * - {@link Button} — Standard button with text, icons, and loading state
+ * - {@link IconButton} — Square icon-only button (no text)
+ *
+ * Both support 6 visual variants and 4 sizes, with consistent:
+ * - Hover/active/focus-visible state transitions
+ * - Disabled and loading states (loading shows a spinner, blocks clicks)
+ * - `aria-busy` attribute for screen readers during loading
+ * - Focus-visible ring using ABA blue (`#3B82F6`)
+ * - `active:scale-[0.98]` micro-interaction on press
+ *
+ * @example
+ * ```tsx
+ * <Button variant="primary" size="lg" loading={isSaving}>
+ *   Save changes
+ * </Button>
+ *
+ * <IconButton variant="ghost" size="sm">
+ *   <Trash2 size={14} />
+ * </IconButton>
+ * ```
+ *
+ * @see index.css — Focus ring and transition tokens
+ * @see instrucciones_de_diseño0.md — Design system philosophy
+ */
+
 import type { ButtonHTMLAttributes } from 'react'
 import { Loader2 } from 'lucide-react'
 
+/** Available visual variants for buttons. */
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'success'
+
+/** Available size presets. */
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
 
+/** Props for both Button and IconButton components. */
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
@@ -105,7 +139,7 @@ export function Button({
   )
 }
 
-/* Icon-only square button */
+/** Icon-only size map — square dimensions for each size preset. */
 const iconSizeMap = {
   xs: 'h-6 w-6 rounded-[6px]',
   sm: 'h-8 w-8 rounded-[8px]',
@@ -113,6 +147,19 @@ const iconSizeMap = {
   lg: 'h-11 w-11 rounded-[12px]',
 }
 
+/**
+ * Icon-only square button variant.
+ *
+ * Renders at the same sizes as {@link Button} but as a perfect square
+ * with no text padding. Use for toolbar actions, close buttons, etc.
+ *
+ * @example
+ * ```tsx
+ * <IconButton variant="ghost" size="md" onClick={handleRefresh}>
+ *   <RefreshCw size={14} />
+ * </IconButton>
+ * ```
+ */
 export function IconButton({
   variant = 'secondary',
   size = 'md',

@@ -1,3 +1,53 @@
+/**
+ * @module index.css
+ * @description ABA Design System global styles and tokens.
+ *
+ * This file establishes the complete design system foundation:
+ *
+ * ## Design Tokens (via @theme inline)
+ * - **Colors**: ABA dark palette (bg, card, border), brand blue (400–700),
+ *   semantic (success/warning/danger/info), text hierarchy
+ * - **Typography**: Inter (sans) + JetBrains Mono (mono), responsive scale
+ * - **Radius**: xs(4px) through full(9999px)
+ * - **Shadows**: xs through xl + glow ring for focus states
+ * - **Spacing**: Base-4 scale (1=4px through 16=64px)
+ * - **Breakpoints**: sm(640) through 2xl(1440)
+ *
+ * ## Base Styles
+ * - Dark background (`#09090B`), smooth scroll, antialiased text
+ * - Custom thin scrollbar (4px, dark track)
+ * - Focus-visible ring using ABA blue
+ * - Blue text selection highlight
+ * - `prefers-reduced-motion` support
+ *
+ * ## Animation Keyframes
+ * - `aba-shimmer` — Skeleton loading shimmer
+ * - `aba-fade-up` — Entrance fade + slide up
+ * - `aba-page-in` — Dashboard page transition
+ * - `aba-modal-backdrop-in` / `aba-modal-panel-in` — Modal entrance
+ * - `aba-dropdown-in` — Dropdown menu entrance
+ * - `aba-slide-in` — Sidebar entrance
+ * - `aba-toast-in` — Toast notification entrance
+ * - `aba-spin` — Loading spinner
+ * - `aba-pulse-dot` — Status dot pulse
+ * - `aba-count-up` — Number animation entrance
+ *
+ * ## Utility Classes
+ * - `.aba-page` — Responsive centered container
+ * - `.aba-table-scroll` — Horizontal scroll wrapper
+ * - `.aba-transition` — 150ms ease transition
+ * - `.aba-sr-only` — Screen reader only
+ * - `.aba-sidebar` — Width transition for collapse
+ * - `.touch-dense` — Override min-height for dense UIs
+ *
+ * ## Responsive
+ * - Touch targets: 44px min-height on mobile (≤768px)
+ * - `.touch-dense` class to override for dense interfaces
+ *
+ * @see instrucciones_de_diseño0.md — Design philosophy
+ * @see instrucciones_de_diseño1.md — Architecture requirements
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 

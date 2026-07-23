@@ -1,4 +1,27 @@
+/**
+ * @module pages/Landing
+ * @description Public landing page for ABA.
+ *
+ * The main marketing page shown to unauthenticated visitors. Contains:
+ * - Hero section with animated terminal demo
+ * - "How it works" 3-step flow
+ * - Feature cards (6 items)
+ * - Security section with visual diagram
+ * - Pricing (single free plan)
+ * - Documentation teaser
+ * - FAQ accordion
+ * - Call-to-action
+ * - Footer with links
+ *
+ * Navigation targets are mapped through react-router's `useNavigate`
+ * to keep everything in the SPA without full page reloads.
+ *
+ * @see instrucciones_de_diseño0.md — Design philosophy and visual language
+ * @see instrucciones_de_diseño1.md — Architecture blueprint requirements
+ */
+
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../ds/Button'
 import { Badge } from '../ds/Badge'
 import { FAQ } from '../data'
@@ -8,27 +31,28 @@ import {
   GitBranch, ArrowRight, Clock, Lock, Cpu, ExternalLink,
 } from 'lucide-react'
 
-/* Standalone landing page — no router/app shell dependency.
-   Update these targets to point at your real signup/login/docs destinations. */
-const ROUTES = {
-  register: '/register',
-  login: '/login',
-  docs: '/docs',
-}
-
-type NavTarget = keyof typeof ROUTES
+/** Available navigation targets from the landing page. */
+type NavTarget = 'register' | 'login' | 'docs'
 type Navigate = (target: NavTarget) => void
 
+// ─── Navigation Bar ────────────────────────────────────────────────────────
+
+/**
+ * Sticky top navigation bar with logo, nav links, and auth buttons.
+ * Uses backdrop blur for a frosted glass effect over content.
+ */
 function LandingNav({ navigate }: { navigate: Navigate }) {
   return (
     <header className="sticky top-0 z-50 border-b border-[#2B2D31]/80 bg-[#09090B]/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-6">
+        {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-[8px] bg-[#3B82F6] flex items-center justify-center">
             <span className="text-white text-[12px] font-bold">A</span>
           </div>
           <span className="text-[15px] font-semibold text-[#F5F5F5]">ABA</span>
         </div>
+        {/* Nav links — hidden on mobile */}
         <nav className="hidden md:flex items-center gap-1 text-[13px] text-[#71717A]">
           {['Features', 'Pricing', 'Documentation', 'Changelog'].map(item => (
             <button key={item} className="px-3 py-1.5 rounded-[6px] hover:text-[#F5F5F5] hover:bg-[#18181B] transition-all">
@@ -36,6 +60,7 @@ function LandingNav({ navigate }: { navigate: Navigate }) {
             </button>
           ))}
         </nav>
+        {/* Auth buttons */}
         <div className="ml-auto flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate('login')}>Sign in</Button>
           <Button variant="primary" size="sm" onClick={() => navigate('register')}>
@@ -47,6 +72,9 @@ function LandingNav({ navigate }: { navigate: Navigate }) {
   )
 }
 
+// ─── Hero Terminal ─────────────────────────────────────────────────────────
+
+/** Simulated terminal output for the hero section. */
 const TERMINAL_LINES = [
   { delay: 0, type: 'cmd', text: '$ aba create my-app-db --engine postgres' },
   { delay: 400, type: 'info', text: '  Selecting region us-east-1…' },
@@ -57,17 +85,21 @@ const TERMINAL_LINES = [
   { delay: 2200, type: 'conn', text: '  postgres://user:••••@host.aba.dev:5432/my-app-db' },
 ]
 
+/**
+ * Animated terminal mock showing the database creation flow.
+ * Renders each line with a delay to simulate real-time output.
+ */
 function HeroTerminal() {
   return (
     <div className="relative rounded-[16px] border border-[#2B2D31] bg-[#111217] shadow-[0_24px_80px_rgba(0,0,0,0.8)] overflow-hidden">
-      {/* Window chrome */}
+      {/* Window chrome — macOS-style traffic lights */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2B2D31] bg-[#0E0E14]">
         <div className="w-3 h-3 rounded-full bg-[#EF4444]/80" />
         <div className="w-3 h-3 rounded-full bg-[#EAB308]/80" />
         <div className="w-3 h-3 rounded-full bg-[#22C55E]/80" />
         <span className="ml-3 text-[11px] font-mono text-[#52525B]">Terminal</span>
       </div>
-      {/* Content */}
+      {/* Terminal content */}
       <div className="p-5 font-mono text-[13px] space-y-1 min-h-[200px]">
         {TERMINAL_LINES.map((line, i) => (
           <div
@@ -91,12 +123,15 @@ function HeroTerminal() {
           </div>
         ))}
       </div>
-      {/* Glow */}
+      {/* Subtle blue glow at bottom */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#3B82F6]/5 to-transparent" />
     </div>
   )
 }
 
+// ─── Features Data ─────────────────────────────────────────────────────────
+
+/** Feature cards displayed in the features section. */
 const FEATURES = [
   {
     icon: Database, color: '#3B82F6',
@@ -130,10 +165,14 @@ const FEATURES = [
   },
 ]
 
+/** Custom activity icon (not available in lucide-react). */
 function Activity2(props: React.SVGProps<SVGSVGElement> & { size?: number }) {
   return <svg width={props.size ?? 24} height={props.size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
 }
 
+// ─── Security Data ─────────────────────────────────────────────────────────
+
+/** Security features listed in the security section. */
 const SECURITY = [
   { icon: Lock, title: 'TLS 1.3 Encryption', desc: 'All connections encrypted in transit using TLS 1.3.' },
   { icon: Shield, title: 'AES-256 at Rest', desc: 'Data encrypted at rest using AES-256-GCM.' },
@@ -141,12 +180,18 @@ const SECURITY = [
   { icon: Cpu, title: 'IP Allowlisting', desc: 'Restrict database access to specific IP ranges.' },
 ]
 
+// ─── How It Works ──────────────────────────────────────────────────────────
+
+/** Three-step "how it works" flow. */
 const HOW_IT_WORKS = [
   { step: '01', title: 'Create a database', desc: 'Choose PostgreSQL or MySQL, pick a region, name your database. Done in under 30 seconds.' },
   { step: '02', title: 'Copy the connection string', desc: 'Get your URI, JDBC, or .env format instantly. Works with any ORM or framework.' },
   { step: '03', title: 'Build your app', desc: 'Connect Prisma, Drizzle, SQLAlchemy, or any SQL client. Monitor usage in the dashboard.' },
 ]
 
+// ─── FAQ Item ──────────────────────────────────────────────────────────────
+
+/** Expandable FAQ accordion item. */
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -165,24 +210,46 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   )
 }
 
-export function Landing() {
+// ─── Route Mapping ─────────────────────────────────────────────────────────
+
+/** Maps navigation targets to actual routes. */
+const ROUTES: Record<NavTarget, string> = {
+  register: '/login', // Both register and login go to the same OAuth page
+  login: '/login',
+  docs: '/docs',
+}
+
+// ─── Main Landing Component ────────────────────────────────────────────────
+
+/**
+ * ABA Landing page — the public marketing page.
+ *
+ * Renders all sections in order: Hero → Social Proof → How It Works →
+ * Features → Security → Pricing → Docs → FAQ → CTA → Footer.
+ *
+ * Uses the ABA Design System (dark theme, Inter/JetBrains Mono fonts,
+ * 12px rounded corners, blue accent color).
+ */
+export default function Landing() {
+  const routerNavigate = useNavigate()
   const navigate: Navigate = (target) => {
-    window.location.href = ROUTES[target]
+    routerNavigate(ROUTES[target])
   }
 
   return (
     <div className="min-h-screen bg-[#09090B]">
       <LandingNav navigate={navigate} />
 
-      {/* Hero */}
+      {/* ═══ Hero ═══════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden">
-        {/* Background grid */}
+        {/* Background grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
-        {/* Radial glow */}
+        {/* Radial blue glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#3B82F6]/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 lg:pt-24 pb-14 sm:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Copy */}
             <div>
               <div className="flex items-center gap-2 mb-6">
                 <Badge variant="primary" dot size="sm">Now in public beta</Badge>
@@ -214,13 +281,14 @@ export function Landing() {
               </div>
             </div>
 
+            {/* Right: Terminal demo */}
             <div className="relative">
               <HeroTerminal />
             </div>
           </div>
         </div>
 
-        {/* Social proof */}
+        {/* Social proof bar */}
         <div className="border-t border-[#2B2D31] bg-[#111217]/50">
           <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-[13px] text-[#71717A]">
@@ -235,7 +303,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* ═══ How It Works ══════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
@@ -245,6 +313,7 @@ export function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
             {HOW_IT_WORKS.map((step, i) => (
               <div key={i} className="relative">
+                {/* Connector line between steps (desktop only) */}
                 {i < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden md:block absolute top-6 left-full w-full h-px bg-gradient-to-r from-[#2B2D31] to-transparent z-0" />
                 )}
@@ -261,7 +330,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* ═══ Features ══════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="mb-14">
@@ -295,7 +364,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Security */}
+      {/* ═══ Security ══════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -321,7 +390,7 @@ export function Landing() {
                 ))}
               </div>
             </div>
-            {/* Security diagram */}
+            {/* Security architecture diagram */}
             <div className="relative">
               <div className="rounded-[16px] border border-[#2B2D31] bg-[#111217] p-6">
                 <div className="flex items-center gap-2 mb-6">
@@ -354,7 +423,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* ═══ Pricing ═══════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
@@ -365,7 +434,7 @@ export function Landing() {
 
           <div className="max-w-md mx-auto">
             <div className="rounded-[16px] border border-[#3B82F6]/50 bg-[#18181B] p-8 relative overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.15)]">
-              {/* Top glow */}
+              {/* Top glow accent */}
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#3B82F6] to-transparent" />
 
               <div className="flex items-center justify-between mb-6">
@@ -412,7 +481,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Documentation teaser */}
+      {/* ═══ Documentation Teaser ══════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -431,6 +500,7 @@ export function Landing() {
                 </Button>
               </div>
             </div>
+            {/* Documentation links list */}
             <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] overflow-hidden">
               {['Getting Started', 'Connection Guide', 'SQL Console', 'API Reference', 'Analytics', 'Security'].map((doc, i) => (
                 <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#2B2D31] last:border-0 hover:bg-[#18181B] transition-colors cursor-pointer group">
@@ -444,7 +514,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* ═══ FAQ ═══════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-12">
@@ -459,7 +529,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ═══ CTA ═══════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 lg:py-24 border-t border-[#2B2D31]">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-[28px] sm:text-[40px] font-semibold text-[#F5F5F5] tracking-tight mb-4">
@@ -477,7 +547,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ═══ Footer ════════════════════════════════════════════════════════ */}
       <footer className="border-t border-[#2B2D31] py-12">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center gap-2.5 mb-8">

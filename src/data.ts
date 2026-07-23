@@ -1,3 +1,22 @@
+/**
+ * @module data
+ * @description Static content data for the ABA landing page.
+ *
+ * Contains the FAQ (Frequently Asked Questions) array used by the
+ * landing page accordion component. Each entry has a question (`q`)
+ * and answer (`a`) as plain text strings.
+ *
+ * Topics covered:
+ * - Pricing and free tier details
+ * - Database inactivity pause policy
+ * - Supported engines (PostgreSQL, MySQL)
+ * - Framework/ORM compatibility
+ * - Security (encryption at rest/in transit)
+ * - Data export capabilities
+ *
+ * @see pages/Landing.tsx — FAQ accordion rendering
+ */
+
 export const FAQ = [
   {
     q: 'Is ABA really free?',
