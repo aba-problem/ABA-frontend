@@ -103,10 +103,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * - After OAuth redirect (to verify the new session)
    */
   const confirmSession = useCallback(async (): Promise<boolean> => {
+    // IMPORTANT: Fetch CSRF cookie FIRST. The backend requires X-CSRF-TOKEN header
+    // on POST /auth/refresh. Without fetching the CSRF cookie first, the header
+    // is never sent and the backend rejects the request.
+    await initCsrf()
+
     const result = await refreshSession()
     if (result.ok) {
-      // Session valid — initialize CSRF token for future mutations
-      await initCsrf()
       setState({ status: 'authenticated', user: null })
       return true
     }

@@ -17,6 +17,7 @@
  */
 
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { loginWithGoogle, loginWithGithub } from '../api/auth'
 import TurnstileChallenge from '../components/TurnstileChallenge'
@@ -25,7 +26,8 @@ import { Database, ArrowRight } from 'lucide-react'
 type Provider = 'google' | 'github'
 
 export default function Login() {
-  const { status } = useAuth()
+  const { status, confirmSession } = useAuth()
+  const navigate = useNavigate()
 
   const [captchaRequired, setCaptchaRequired] = useState(false)
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null)
@@ -33,6 +35,14 @@ export default function Login() {
 
   const handleLogin = useCallback(async (provider: Provider, captchaToken?: string) => {
     setRateLimitMsg(null)
+
+    // Guard: if the user already has a valid session, skip OAuth entirely.
+    // This prevents the "repeat full login flow" issue seen in production logs.
+    const sessionValid = await confirmSession()
+    if (sessionValid) {
+      navigate('/dashboard', { replace: true })
+      return
+    }
 
     const loginFn = provider === 'google' ? loginWithGoogle : loginWithGithub
     const result = await loginFn(captchaToken)
@@ -53,7 +63,7 @@ export default function Login() {
       // Generic error — redirect to /auth/error
       window.location.href = `/auth/error?reason=${encodeURIComponent(result.error.error)}`
     }
-  }, [])
+  }, [confirmSession, navigate])
 
   const handleCaptchaToken = useCallback(async (token: string) => {
     setCaptchaRequired(false)
