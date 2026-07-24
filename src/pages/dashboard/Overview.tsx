@@ -20,7 +20,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { listDatabases } from '../../api/dashboard'
+import { listDatabases, getProfile } from '../../api/dashboard'
 import type { DashboardItem } from '../../api/types'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { StatusDot } from '../../ds/Badge'
@@ -72,10 +72,12 @@ export default function DashboardOverview() {
     return () => { cancelled = true }
   }, [])
 
-  // TODO backend: fetch user profile from a dedicated endpoint once available
   useEffect(() => {
     if (!user) {
-      setUser({ usuarioId: 0, nombre: 'Developer', correo: '', avatarUrl: null, proveedor: '', fechaCreacion: '', ultimoLogin: null })
+      (async () => {
+        const result = await getProfile()
+        if (result.ok) setUser(result.data)
+      })()
     }
   }, [user, setUser])
 

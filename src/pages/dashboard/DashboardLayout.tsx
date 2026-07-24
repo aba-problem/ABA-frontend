@@ -146,7 +146,10 @@ export default function DashboardLayout() {
               Main site
             </a>
             {user && (
-              <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => navigate('/dashboard/settings')}
+                className="flex items-center gap-2.5 cursor-pointer group"
+              >
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
                 ) : (
@@ -156,8 +159,8 @@ export default function DashboardLayout() {
                     </span>
                   </div>
                 )}
-                <span className="text-[13px] text-[#A1A1AA] hidden sm:inline">{user.nombre}</span>
-              </div>
+                <span className="text-[13px] text-[#A1A1AA] hidden sm:inline group-hover:text-[#F5F5F5] transition-colors">{user.nombre}</span>
+              </button>
             )}
           </div>
         </header>

@@ -17,7 +17,7 @@
  */
 
 import { apiGet, apiDelete } from './client'
-import type { DashboardItem, Credencial } from './types'
+import type { DashboardItem, Credencial, Usuario } from './types'
 
 /**
  * Lists all databases belonging to the authenticated user.
@@ -88,4 +88,16 @@ export async function getCredential(id: number) {
  */
 export async function deleteDatabase(id: number) {
   return apiDelete<unknown>(`/dashboard/bases/${id}`)
+}
+
+/**
+ * Gets the authenticated user's profile data.
+ *
+ * Calls `GET /dashboard/perfil`. Returns user identity info
+ * (name, email, avatar, provider, dates) from SQL Server.
+ *
+ * @returns User profile data, or error
+ */
+export async function getProfile() {
+  return apiGet<Usuario>('/dashboard/perfil')
 }

@@ -34,6 +34,7 @@ import DashboardOverview from './pages/dashboard/Overview'
 import DatabasesPage from './pages/dashboard/DatabasesPage'
 import DatabaseDetailPage from './pages/dashboard/DatabaseDetailPage'
 import NewDatabasePage from './pages/dashboard/NewDatabasePage'
+import SettingsPage from './pages/dashboard/SettingsPage'
 import type { ReactNode } from 'react'
 
 // ─── Route Guards ──────────────────────────────────────────────────────────
@@ -116,6 +117,7 @@ export default function App() {
             <Route path="databases" element={<DatabasesPage />} />
             <Route path="databases/:id" element={<DatabaseDetailPage />} />
             <Route path="new" element={<NewDatabasePage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
 
           {/* ─── Catch All ─────────────────────────────────────── */}
