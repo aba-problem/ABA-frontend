@@ -63,37 +63,24 @@ export const API_BASE = import.meta.env.VITE_API_URL || 'https://api.aba.andresc
  *
  * We only need to call this once per session — after that, the cookies persist.
  */
-let csrfTokenFetched = false
-
 /**
  * Fetches the CSRF token from the backend.
  *
- * Calls `GET /auth/csrf` which returns 204 No Content but sets the CSRF cookies.
- * This is a no-op if already called (idempotent). Safe to call multiple times.
+ * Calls `GET /auth/csrf` which returns 204 No Content but sets the CSRF cookies
+ * (`XSRF-TOKEN` readable by JS, `__CSRF` HttpOnly for server validation).
  *
- * **When to call:**
- * - After successful login (in `AuthContext.confirmSession()`)
- * - Before any mutating request if cookies might be stale
- *
- * @example
- * ```typescript
- * await fetchCsrf() // Sets XSRF-TOKEN cookie
- * // Now any apiPost() will include the CSRF header
- * ```
+ * Always re-fetches to avoid stale tokens if cookies were cleared by the browser
+ * or SameSite policy. The endpoint is lightweight (204, no body).
  */
 export async function fetchCsrf(): Promise<void> {
-  if (csrfTokenFetched) return
   await fetch(`${API_BASE}/auth/csrf`, { credentials: 'include' })
-  csrfTokenFetched = true
 }
 
 /**
- * Resets the CSRF token tracking flag.
- *
- * Call this on logout so the next session fetches fresh CSRF tokens.
+ * No-op kept for API compatibility. CSRF is now always re-fetched.
  */
 export function resetCsrf() {
-  csrfTokenFetched = false
+  // Intentionally empty: fetchCsrf() always re-fetches, no flag to reset.
 }
 
 // ─── XSRF Token Reading ───────────────────────────────────────────────────
