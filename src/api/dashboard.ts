@@ -16,7 +16,7 @@
  * @see ABA-backend/Controllers/DashboardController.cs
  */
 
-import { apiGet } from './client'
+import { apiGet, apiDelete } from './client'
 import type { DashboardItem, Credencial } from './types'
 
 /**
@@ -72,4 +72,20 @@ export async function getDatabase(id: number) {
  */
 export async function getCredential(id: number) {
   return apiGet<Credencial>(`/dashboard/bases/${id}/credencial`)
+}
+
+/**
+ * Soft-deletes a database by setting its status to 'ELIMINADA'.
+ *
+ * Calls `DELETE /dashboard/bases/{id}`. The backend validates ownership
+ * (BOLA) and requires a CSRF token. The database is not physically removed
+ * — it's soft-deleted for audit trail integrity.
+ *
+ * On success, returns 204 No Content.
+ *
+ * @param id - Database ID to deactivate
+ * @returns Success or error
+ */
+export async function deleteDatabase(id: number) {
+  return apiDelete<unknown>(`/dashboard/bases/${id}`)
 }

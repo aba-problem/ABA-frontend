@@ -140,6 +140,19 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<ApiResul
   return apiRequest<T>('POST', path, body)
 }
 
+/**
+ * Performs a DELETE request to the ABA backend.
+ *
+ * Automatically includes the CSRF token header for CSRF protection.
+ *
+ * @typeParam T - Expected response type
+ * @param path - API path (e.g. '/dashboard/bases/1')
+ * @returns Typed result with data or error
+ */
+export async function apiDelete<T>(path: string): Promise<ApiResult<T>> {
+  return apiRequest<T>('DELETE', path)
+}
+
 // ─── Core Request Engine ───────────────────────────────────────────────────
 
 /**

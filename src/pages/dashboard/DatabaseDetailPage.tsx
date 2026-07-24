@@ -24,14 +24,14 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getDatabase, getCredential } from '../../api/dashboard'
+import { getDatabase, getCredential, deleteDatabase } from '../../api/dashboard'
 import type { DashboardItem, Credencial } from '../../api/types'
 import { Skeleton, SkeletonText } from '../../ds/Skeleton'
 import { Badge, StatusDot } from '../../ds/Badge'
 import { Button } from '../../ds/Button'
 import {
   Database, ArrowLeft, Copy, Check, Eye, EyeOff, HardDrive,
-  Activity, Clock, Server, User, Shield,
+  Activity, Clock, Server, User, Shield, Trash2,
 } from 'lucide-react'
 
 /**
@@ -77,6 +77,8 @@ export default function DatabaseDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [copiedConn, setCopiedConn] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -114,6 +116,19 @@ export default function DatabaseDetailPage() {
     setCopiedConn(true)
     setTimeout(() => setCopiedConn(false), 2000)
   }, [cred])
+
+  const handleDelete = useCallback(async () => {
+    if (!id || deleting) return
+    setDeleting(true)
+    const result = await deleteDatabase(Number(id))
+    if (result.ok) {
+      navigate('/dashboard', { replace: true })
+    } else {
+      setError(result.error.error)
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }, [id, deleting, navigate])
 
   if (loading) {
     return (
@@ -338,6 +353,51 @@ export default function DatabaseDetailPage() {
               label="Last Activity"
               value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleString() : 'N/A'}
             />
+          </div>
+
+          {/* Danger zone: Delete */}
+          <div className="rounded-[14px] border border-[#7F1D1D]/40 bg-[#18181B] p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Trash2 size={14} className="text-[#EF4444]" />
+              <h3 className="text-[14px] font-semibold text-[#F87171]">Danger Zone</h3>
+            </div>
+            <p className="text-[13px] text-[#71717A] mb-4">
+              Deactivating this database will set its status to &quot;ELIMINADA&quot;.
+              The database will no longer be accessible.
+            </p>
+            {!showDeleteConfirm ? (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Deactivate Database
+              </Button>
+            ) : (
+              <div className="rounded-[10px] border border-[#7F1D1D] bg-[#2A1010] p-4">
+                <p className="text-[13px] text-[#F87171] mb-3">
+                  Are you sure? This action cannot be undone.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    loading={deleting}
+                    onClick={handleDelete}
+                  >
+                    Yes, deactivate
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
