@@ -66,11 +66,20 @@ async function probeLogin(provider: 'google' | 'github', captchaToken?: string):
     url.searchParams.set('captchaToken', captchaToken)
   }
 
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    redirect: 'manual', // Don't follow — we need to inspect the response
-    credentials: 'include',
-  })
+  let res: Response
+  try {
+    res = await fetch(url.toString(), {
+      method: 'GET',
+      redirect: 'manual', // Don't follow — we need to inspect the response
+      credentials: 'include',
+    })
+  } catch {
+    return {
+      ok: false,
+      error: { error: 'No se pudo conectar con el servidor de autenticación.' },
+      status: 0,
+    }
+  }
 
   // Opaque redirect = backend returned 302 to the OAuth provider.
   // We can't read the Location header (opaque), but we know the URL we probed.

@@ -9,7 +9,7 @@
  * Topics covered:
  * - Pricing and free tier details
  * - Database inactivity pause policy
- * - Supported engines (PostgreSQL, MySQL)
+ * - Supported engines (MySQL, SQL Server)
  * - Framework/ORM compatibility
  * - Security (encryption at rest/in transit)
  * - Data export capabilities
@@ -20,7 +20,7 @@
 export const FAQ = [
   {
     q: 'Is ABA really free?',
-    a: 'Yes. ABA provides free PostgreSQL and MySQL databases with 512 MB storage, 20 connections, and unlimited queries — no credit card required, ever.',
+    a: 'Yes. ABA provides free MySQL and SQL Server databases with a controlled 20 MB quota per database — no credit card required.',
   },
   {
     q: 'How long do databases stay active?',
@@ -28,11 +28,11 @@ export const FAQ = [
   },
   {
     q: 'What database engines are supported?',
-    a: 'ABA currently supports PostgreSQL 14, 15, and 16, and MySQL 8.0. More engines including Redis and SQLite are on the roadmap.',
+    a: 'ABA currently supports MySQL 8.0 and SQL Server. More engines may be added as the platform evolves.',
   },
   {
     q: 'Can I connect my framework or ORM?',
-    a: 'Yes. ABA databases work with any client that supports standard PostgreSQL or MySQL protocols — Prisma, Drizzle, SQLAlchemy, Hibernate, and more.',
+    a: 'Yes. ABA databases work with clients and ORMs that support standard MySQL or SQL Server connections.',
   },
   {
     q: 'Is my data secure?',

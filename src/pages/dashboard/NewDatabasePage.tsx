@@ -5,7 +5,7 @@
  * Two-step flow:
  * 1. **Engine selection**: Choose between MySQL 8.0 and SQL Server
  *    (rendered as selectable cards with radio-style indicator)
- * 2. **Provisioning**: POST to `POST /api/provisioning/create`. On
+ * 2. **Provisioning**: POST to `POST /provisioning/crear`. On
  *    success, a modal shows the new database credentials including
  *    the one-time `passwordTemporal`.
  *
@@ -87,8 +87,8 @@ export default function NewDatabasePage() {
       </button>
 
       <div>
-        <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight mb-1">Create Database</h1>
-        <p className="text-[14px] text-[#71717A]">Choose an engine. Your database will be ready in seconds.</p>
+        <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight mb-1">Crear base de datos</h1>
+        <p className="text-[14px] text-[#71717A]">Elige un motor compatible. La base quedará lista en segundos.</p>
       </div>
 
       {/* Engine selector */}
@@ -130,7 +130,7 @@ export default function NewDatabasePage() {
       <div className="rounded-[10px] border border-[#2B2D31] bg-[#111217] p-4 flex items-center gap-3">
         <Terminal size={14} className="text-[#71717A] shrink-0" />
         <p className="text-[12px] text-[#71717A]">
-          Rate limit: 1 database creation every 10 minutes.
+          Límite: 1 creación de base de datos cada 10 minutos.
         </p>
       </div>
 
@@ -148,10 +148,10 @@ export default function NewDatabasePage() {
           disabled={!selected}
           onClick={handleCreate}
         >
-          Create database
+          Crear base de datos
         </Button>
         <Button variant="ghost" size="lg" onClick={() => navigate(-1)}>
-          Cancel
+          Cancelar
         </Button>
       </div>
 
@@ -164,25 +164,25 @@ export default function NewDatabasePage() {
             navigate(`/dashboard/databases/${result.data.baseDeDatosId}`)
           }
         }}
-        title="Database created"
+        title="Base de datos creada"
       >
         {result?.ok && (
           <div className="space-y-4">
             <div className="rounded-[10px] bg-[#14291E] border border-[#14522D] p-3 flex items-center gap-2">
               <Check size={14} className="text-[#22C55E] shrink-0" />
               <span className="text-[13px] text-[#4ADE80]">
-                Your database is ready. Copy the password below — it won&apos;t be shown again.
+                 Tu base está lista. Copia la contraseña ahora; no se volverá a mostrar.
               </span>
             </div>
 
             <div className="space-y-2">
               {[
-                { label: 'Name', value: result.data.nombreBD, key: 'name' },
+                { label: 'Nombre', value: result.data.nombreBD, key: 'name' },
                 { label: 'Host', value: result.data.host, key: 'host' },
                 { label: 'Port', value: String(result.data.puerto), key: 'port' },
-                { label: 'User', value: result.data.usuarioBD, key: 'user' },
-                { label: 'Password', value: result.data.passwordTemporal, key: 'pass' },
-                { label: 'Engine', value: result.data.motor, key: 'engine' },
+                { label: 'Usuario', value: result.data.usuarioBD, key: 'user' },
+                { label: 'Contraseña', value: result.data.passwordTemporal, key: 'pass' },
+                { label: 'Motor', value: result.data.motor, key: 'engine' },
               ].map(item => (
                 <div key={item.key} className="flex items-center justify-between py-2 border-b border-[#2B2D31] last:border-0">
                   <span className="text-[12px] text-[#52525B] uppercase">{item.label}</span>
@@ -207,7 +207,7 @@ export default function NewDatabasePage() {
                 navigate(`/dashboard/databases/${result.data.baseDeDatosId}`)
               }}
             >
-              Go to database
+               Ir a la base
             </Button>
           </div>
         )}

@@ -11,7 +11,7 @@
  * credential views per hour. The password is shown/hidden with a toggle.
  *
  * A one-click "Copy connection string" button constructs the full URI
- * (`postgresql://` or `mysql://`) and copies it to the clipboard.
+ * (`mysql://` or `sqlserver://`) and copies it to the clipboard.
  *
  * Uses the `InfoRow` sub-component for all key-value rows with optional
  * copy-to-clipboard functionality.
@@ -111,7 +111,8 @@ export default function DatabaseDetailPage() {
 
   const copyConnectionString = useCallback(() => {
     if (!cred) return
-    const connStr = `${cred.motor === 'MySQL' ? 'mysql' : 'postgresql'}://${cred.usuarioBD}:${cred.password}@${cred.host}:${cred.puerto}/${cred.nombreBD}`
+    const scheme = cred.motor === 'MySQL' ? 'mysql' : 'sqlserver'
+    const connStr = `${scheme}://${cred.usuarioBD}:${cred.password}@${cred.host}:${cred.puerto}/${cred.nombreBD}`
     navigator.clipboard.writeText(connStr)
     setCopiedConn(true)
     setTimeout(() => setCopiedConn(false), 2000)
@@ -175,7 +176,7 @@ export default function DatabaseDetailPage() {
         className="flex items-center gap-1.5 text-[13px] text-[#71717A] hover:text-[#F5F5F5] transition-colors cursor-pointer"
       >
         <ArrowLeft size={14} />
-        Back to databases
+        Volver a bases de datos
       </button>
 
       {/* Header */}
@@ -206,7 +207,7 @@ export default function DatabaseDetailPage() {
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-4">
               <Server size={14} className="text-[#3B82F6]" />
-              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Connection</h3>
+              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Conexión</h3>
             </div>
             <InfoRow label="Host" value={db.host} mono copyable />
             <InfoRow label="Port" value={String(db.puerto)} mono copyable />
@@ -217,7 +218,7 @@ export default function DatabaseDetailPage() {
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-4">
               <HardDrive size={14} className="text-[#A855F7]" />
-              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Storage</h3>
+              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Almacenamiento</h3>
             </div>
             {/* Storage ring */}
             <div className="flex items-center justify-center mb-4">
@@ -240,19 +241,19 @@ export default function DatabaseDetailPage() {
               </div>
             </div>
             <div className="text-center">
-              <span className="text-[12px] text-[#71717A]">{storagePercent.toFixed(1)}% used</span>
+              <span className="text-[12px] text-[#71717A]">{storagePercent.toFixed(1)}% usado</span>
             </div>
           </div>
 
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={14} className="text-[#22C55E]" />
-              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Activity</h3>
+              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Actividad</h3>
             </div>
-            <InfoRow label="Created" value={new Date(db.fechaCreacion).toLocaleDateString()} />
+              <InfoRow label="Creada" value={new Date(db.fechaCreacion).toLocaleDateString()} />
             <InfoRow
               label="Last active"
-              value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleDateString() : 'Never'}
+                value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleDateString() : 'Nunca'}
             />
           </div>
         </div>
@@ -264,7 +265,7 @@ export default function DatabaseDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Shield size={14} className="text-[#EAB308]" />
-                <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Credentials</h3>
+                <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Credenciales</h3>
               </div>
               {!cred && (
                 <Button
@@ -273,7 +274,7 @@ export default function DatabaseDetailPage() {
                   loading={credLoading}
                   onClick={loadCredential}
                 >
-                  Reveal credentials
+                  Ver credenciales
                 </Button>
               )}
             </div>
@@ -288,7 +289,7 @@ export default function DatabaseDetailPage() {
                       className="flex items-center gap-1 text-[11px] text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
                     >
                       {copiedConn ? <Check size={11} /> : <Copy size={11} />}
-                      {copiedConn ? 'Copied' : 'Copy'}
+                      {copiedConn ? 'Copiado' : 'Copiar'}
                     </button>
                   </div>
                   <p className="text-[#A1A1AA] break-all">
@@ -321,7 +322,7 @@ export default function DatabaseDetailPage() {
                 <div className="flex items-center gap-2 px-3 py-2 rounded-[8px] bg-[#2A2008] border border-[#422006]">
                   <Clock size={12} className="text-[#EAB308] shrink-0" />
                   <span className="text-[11px] text-[#FCD34D]">
-                    Rate limit: 5 credential views per hour
+                       Límite: 5 consultas de credenciales por hora
                   </span>
                 </div>
               </div>
@@ -329,9 +330,9 @@ export default function DatabaseDetailPage() {
               <div className="rounded-[10px] border border-dashed border-[#2B2D31] bg-[#09090B] p-8 text-center">
                 <User size={20} className="text-[#52525B] mx-auto mb-2" />
                 <p className="text-[13px] text-[#71717A]">
-                  Click &quot;Reveal credentials&quot; to view connection details
+                  Haz clic en &quot;Ver credenciales&quot; para consultar los datos de conexión
                 </p>
-                <p className="text-[11px] text-[#52525B] mt-1">Rate limited to 5 views per hour</p>
+                <p className="text-[11px] text-[#52525B] mt-1">Limitado a 5 consultas por hora</p>
               </div>
             )}
           </div>
@@ -340,7 +341,7 @@ export default function DatabaseDetailPage() {
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-4">
               <Database size={14} className="text-[#3B82F6]" />
-              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Database Details</h3>
+              <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Detalles de la base</h3>
             </div>
             <InfoRow label="Name" value={db.nombreBD} mono copyable />
             <InfoRow label="User" value={db.usuarioBD} mono copyable />

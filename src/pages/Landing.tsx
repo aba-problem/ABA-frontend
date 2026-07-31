@@ -76,13 +76,13 @@ function LandingNav({ navigate }: { navigate: Navigate }) {
 
 /** Simulated terminal output for the hero section. */
 const TERMINAL_LINES = [
-  { delay: 0, type: 'cmd', text: '$ aba create my-app-db --engine postgres' },
-  { delay: 400, type: 'info', text: '  Selecting region us-east-1…' },
-  { delay: 800, type: 'info', text: '  Provisioning PostgreSQL 16…' },
+  { delay: 0, type: 'cmd', text: '$ aba create my-app-db --engine mysql' },
+  { delay: 400, type: 'info', text: '  Validating account quota...' },
+  { delay: 800, type: 'info', text: '  Provisioning MySQL 8.0...' },
   { delay: 1200, type: 'success', text: '  ✓ Database ready in 8.4s' },
   { delay: 1600, type: 'success', text: '  ✓ Connection string copied' },
   { delay: 2000, type: 'blank', text: '' },
-  { delay: 2200, type: 'conn', text: '  postgres://user:••••@host.aba.dev:5432/my-app-db' },
+  { delay: 2200, type: 'conn', text: '  mysql://user:****@host.aba.dev:3306/my-app-db' },
 ]
 
 /**
@@ -135,8 +135,8 @@ function HeroTerminal() {
 const FEATURES = [
   {
     icon: Database, color: '#3B82F6',
-    title: 'PostgreSQL & MySQL',
-    desc: 'Support for PostgreSQL 14–16 and MySQL 8.0 with full SQL compliance. Get a production-ready database in seconds.',
+    title: 'MySQL & SQL Server',
+    desc: 'Provision MySQL 8.0 or SQL Server databases with controlled quotas and ready-to-use credentials.',
   },
   {
     icon: Terminal, color: '#6366F1',
@@ -184,8 +184,8 @@ const SECURITY = [
 
 /** Three-step "how it works" flow. */
 const HOW_IT_WORKS = [
-  { step: '01', title: 'Create a database', desc: 'Choose PostgreSQL or MySQL, pick a region, name your database. Done in under 30 seconds.' },
-  { step: '02', title: 'Copy the connection string', desc: 'Get your URI, JDBC, or .env format instantly. Works with any ORM or framework.' },
+  { step: '01', title: 'Create a database', desc: 'Choose MySQL or SQL Server. ABA assigns names, users and safe limits automatically.' },
+  { step: '02', title: 'Copy the connection data', desc: 'Get host, port, user and a one-time password generated for your database.' },
   { step: '03', title: 'Build your app', desc: 'Connect Prisma, Drizzle, SQLAlchemy, or any SQL client. Monitor usage in the dashboard.' },
 ]
 
@@ -259,7 +259,7 @@ export default function Landing() {
                 <span className="text-[#3B82F6]">for every builder.</span>
               </h1>
               <p className="text-[18px] text-[#A1A1AA] leading-relaxed mb-8 max-w-lg">
-                Free PostgreSQL and MySQL databases. Instant connection strings, browser SQL console, real-time analytics — no credit card needed.
+                Free MySQL and SQL Server databases. Instant credentials, usage overview and secure provisioning — no credit card needed.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
@@ -272,7 +272,7 @@ export default function Landing() {
               </div>
 
               <div className="flex items-center gap-6 text-[13px] text-[#71717A]">
-                {['No credit card', 'PostgreSQL & MySQL', '512 MB free'].map(f => (
+                {['No credit card', 'MySQL & SQL Server', '20 MB quota'].map(f => (
                   <div key={f} className="flex items-center gap-1.5">
                     <Check size={13} className="text-[#22C55E]" />
                     {f}
@@ -452,11 +452,11 @@ export default function Landing() {
 
               <div className="space-y-3 mb-8">
                 {[
-                  '512 MB storage per database',
-                  'Unlimited databases',
+                  '20 MB storage quota per database',
+                  'Up to 3 active databases',
                   'Unlimited queries',
                   '20 concurrent connections',
-                  'PostgreSQL 14/15/16 & MySQL 8.0',
+                  'MySQL 8.0 & SQL Server',
                   'Browser SQL Console',
                   'API key management',
                   'Real-time analytics',

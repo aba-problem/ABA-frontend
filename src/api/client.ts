@@ -73,7 +73,10 @@ export const API_BASE = import.meta.env.VITE_API_URL || 'https://api.aba.andresc
  * or SameSite policy. The endpoint is lightweight (204, no body).
  */
 export async function fetchCsrf(): Promise<void> {
-  await fetch(`${API_BASE}/auth/csrf`, { credentials: 'include' })
+  const res = await fetch(`${API_BASE}/auth/csrf`, { credentials: 'include' })
+  if (!res.ok) {
+    throw new Error('No se pudo inicializar la protección CSRF.')
+  }
 }
 
 /**
@@ -192,12 +195,21 @@ async function apiRequest<T>(method: string, path: string, body?: unknown): Prom
     }
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    credentials: 'include', // CRITICAL: sends HttpOnly cookies (access_token, refresh_token, __CSRF)
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      credentials: 'include', // CRITICAL: sends HttpOnly cookies (access_token, refresh_token, __CSRF)
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    return {
+      ok: false,
+      error: { error: 'No se pudo conectar con el servidor. Verifica tu conexión o intenta de nuevo.' },
+      status: 0,
+    }
+  }
 
   // 204 No Content — used by /auth/refresh, /auth/logout, /auth/csrf
   if (res.status === 204) {

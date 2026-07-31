@@ -8,14 +8,14 @@
  *
  * Both use a shared `BadgeVariant` type for consistent color mapping
  * across the design system. Badges are used for:
- * - Database engine labels (`primary` for PostgreSQL, `info` for MySQL)
+ * - Database engine labels (`primary` for SQL Server, `info` for MySQL)
  * - Status indicators (ACTIVA, PAUSADA, etc.)
  * - Navigation pills ("Now in public beta")
  * - Rate limit warnings
  *
  * @example
  * ```tsx
- * <Badge variant="primary" dot size="sm">PostgreSQL</Badge>
+ * <Badge variant="primary" dot size="sm">SQL Server</Badge>
  * <Badge variant="success" size="md">Active</Badge>
  * <StatusDot variant="success" pulse />
  * ```

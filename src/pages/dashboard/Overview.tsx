@@ -91,7 +91,7 @@ export default function DashboardOverview() {
       <div>
         <h1 className="text-[28px] font-semibold text-[#F5F5F5] tracking-tight mb-1">Dashboard</h1>
         <p className="text-[14px] text-[#71717A]">
-          Welcome back{user?.nombre ? `, ${user.nombre}` : ''}. Here&apos;s your infrastructure overview.
+          Bienvenido{user?.nombre ? `, ${user.nombre}` : ''}. Este es el estado actual de tu infraestructura.
         </p>
       </div>
 
@@ -107,22 +107,22 @@ export default function DashboardOverview() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Database} label="Total databases" value={databases.length} color="#3B82F6" />
-          <StatCard icon={Activity} label="Active" value={activeDbs.length} color="#22C55E" />
-          <StatCard icon={HardDrive} label="Storage used" value={`${totalStorage.toFixed(1)} MB`} color="#A855F7" />
-          <StatCard icon={Clock} label="Max quota" value={`${maxStorage} MB`} color="#EAB308" />
+          <StatCard icon={Database} label="Bases totales" value={databases.length} color="#3B82F6" />
+          <StatCard icon={Activity} label="Activas" value={activeDbs.length} color="#22C55E" />
+          <StatCard icon={HardDrive} label="Uso actual" value={`${totalStorage.toFixed(1)} MB`} color="#A855F7" />
+          <StatCard icon={Clock} label="Cuota máxima" value={`${maxStorage} MB`} color="#EAB308" />
         </div>
       )}
 
       {/* Recent databases */}
       <div>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[18px] font-semibold text-[#F5F5F5]">Your databases</h2>
+          <h2 className="text-[18px] font-semibold text-[#F5F5F5]">Tus bases de datos</h2>
           <button
             onClick={() => navigate('/dashboard/new')}
             className="text-[13px] text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
           >
-            + Create new
+            + Crear nueva
           </button>
         </div>
 
@@ -135,15 +135,15 @@ export default function DashboardOverview() {
             <div className="w-12 h-12 rounded-[12px] bg-[#1E2D4A] border border-[#1E3A6E] flex items-center justify-center mx-auto mb-4">
               <Database size={20} className="text-[#3B82F6]" />
             </div>
-            <h3 className="text-[16px] font-semibold text-[#F5F5F5] mb-2">No databases yet</h3>
+            <h3 className="text-[16px] font-semibold text-[#F5F5F5] mb-2">Aún no tienes bases de datos</h3>
             <p className="text-[14px] text-[#71717A] mb-6 max-w-sm mx-auto">
-              Create your first database in under 30 seconds. PostgreSQL or MySQL — your choice.
+              Crea tu primera base en segundos. Puedes elegir entre MySQL y SQL Server.
             </p>
             <button
               onClick={() => navigate('/dashboard/new')}
               className="inline-flex items-center gap-2 h-10 px-5 rounded-[10px] bg-[#3B82F6] text-[14px] font-medium text-white hover:bg-[#2563EB] transition-all cursor-pointer"
             >
-              Create database
+              Crear base
               <ArrowRight size={14} />
             </button>
           </div>

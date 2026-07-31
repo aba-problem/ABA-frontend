@@ -25,7 +25,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink,
+  Settings, ExternalLink, Menu, X,
 } from 'lucide-react'
 
 /** Sidebar navigation items. */
@@ -36,6 +36,7 @@ const NAV_ITEMS = [
 
 export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { logout, user } = useAuth()
   const navigate = useNavigate()
 
@@ -46,11 +47,19 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-[#09090B] flex">
+      {mobileOpen && (
+        <button
+          aria-label="Cerrar navegación"
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`aba-sidebar sticky top-0 h-screen flex flex-col border-r border-[#2B2D31] bg-[#111217] z-40 ${
+        className={`aba-sidebar fixed lg:sticky top-0 h-screen flex flex-col border-r border-[#2B2D31] bg-[#111217] z-40 transition-transform duration-200 ${
           collapsed ? 'w-[60px]' : 'w-[240px]'
-        }`}
+        } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Logo */}
         <div className="h-14 flex items-center gap-2.5 px-4 border-b border-[#2B2D31]">
@@ -58,6 +67,13 @@ export default function DashboardLayout() {
             <span className="text-white text-[12px] font-bold">A</span>
           </div>
           {!collapsed && <span className="text-[15px] font-semibold text-[#F5F5F5]">ABA</span>}
+          <button
+            aria-label="Cerrar navegación"
+            onClick={() => setMobileOpen(false)}
+            className="ml-auto w-8 h-8 rounded-[8px] text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#18181B] lg:hidden flex items-center justify-center"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         {/* Nav */}
@@ -66,6 +82,7 @@ export default function DashboardLayout() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => setMobileOpen(false)}
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all duration-150 ${
@@ -84,7 +101,10 @@ export default function DashboardLayout() {
         {/* Quick action */}
         <div className="px-2 pb-2">
           <button
-            onClick={() => navigate('/dashboard/new')}
+            onClick={() => {
+              setMobileOpen(false)
+              navigate('/dashboard/new')
+            }}
             className={`flex items-center gap-2.5 h-9 rounded-[8px] bg-[#3B82F6] text-[13px] font-medium text-white hover:bg-[#2563EB] transition-all duration-150 cursor-pointer w-full ${
               collapsed ? 'justify-center px-0' : 'px-3'
             }`}
@@ -98,6 +118,7 @@ export default function DashboardLayout() {
         <div className="border-t border-[#2B2D31] p-2 space-y-0.5">
           <NavLink
             to="/dashboard/settings"
+            onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
                 isActive
@@ -124,7 +145,7 @@ export default function DashboardLayout() {
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#18181B] border border-[#2B2D31] flex items-center justify-center text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-all cursor-pointer z-50"
+          className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#18181B] border border-[#2B2D31] items-center justify-center text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-all cursor-pointer z-50"
         >
           {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </button>
@@ -134,7 +155,14 @@ export default function DashboardLayout() {
       <div className="flex-1 min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-14 border-b border-[#2B2D31] bg-[#09090B]/80 backdrop-blur-md flex items-center justify-between px-6">
-          <div />
+          <button
+            aria-label="Abrir navegación"
+            onClick={() => setMobileOpen(true)}
+            className="w-9 h-9 rounded-[9px] border border-[#2B2D31] bg-[#111217] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#18181B] lg:hidden flex items-center justify-center"
+          >
+            <Menu size={17} />
+          </button>
+          <div className="hidden lg:block" />
           <div className="flex items-center gap-4">
             <a
               href="https://aba.andrescortes.dev"

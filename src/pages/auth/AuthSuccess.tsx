@@ -6,15 +6,14 @@
  * flow and redirects the browser here. The HttpOnly session cookie is
  * already set by the backend at this point.
  *
- * Calls {@link confirmSession} to hit `GET /api/auth/me`, which
- * populates the user in `AuthContext`. On success, navigates to
+ * Calls {@link confirmSession} to refresh the cookie session. On success, navigates to
  * `/dashboard`. On failure, shows an error with a retry link.
  *
  * Uses a cleanup ref to prevent state updates on unmounted components
  * (race condition between the async call and navigation).
  *
  * @see contexts/AuthContext.tsx — confirmSession implementation
- * @see api/auth.ts — getMe call
+ * @see api/auth.ts — refreshSession call
  */
 
 import { useEffect, useState } from 'react'
