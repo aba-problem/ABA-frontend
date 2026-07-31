@@ -35,6 +35,8 @@ import {
 type NavTarget = 'register' | 'login' | 'docs'
 type Navigate = (target: NavTarget) => void
 
+const DOCS_URL = 'https://docs.aba.andrescortes.dev/'
+
 // ─── Navigation Bar ────────────────────────────────────────────────────────
 
 /**
@@ -55,7 +57,11 @@ function LandingNav({ navigate }: { navigate: Navigate }) {
         {/* Nav links — hidden on mobile */}
         <nav className="hidden md:flex items-center gap-1 text-[13px] text-[#71717A]">
           {['Features', 'Pricing', 'Documentation', 'Changelog'].map(item => (
-            <button key={item} className="px-3 py-1.5 rounded-[6px] hover:text-[#F5F5F5] hover:bg-[#18181B] transition-all">
+            <button
+              key={item}
+              onClick={item === 'Documentation' ? () => navigate('docs') : undefined}
+              className="px-3 py-1.5 rounded-[6px] hover:text-[#F5F5F5] hover:bg-[#18181B] transition-all"
+            >
               {item}
             </button>
           ))}
@@ -216,7 +222,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 const ROUTES: Record<NavTarget, string> = {
   register: '/login', // Both register and login go to the same OAuth page
   login: '/login',
-  docs: '/docs',
+  docs: DOCS_URL,
 }
 
 // ─── Main Landing Component ────────────────────────────────────────────────
@@ -233,6 +239,10 @@ const ROUTES: Record<NavTarget, string> = {
 export default function Landing() {
   const routerNavigate = useNavigate()
   const navigate: Navigate = (target) => {
+    if (target === 'docs') {
+      window.location.href = DOCS_URL
+      return
+    }
     routerNavigate(ROUTES[target])
   }
 
@@ -502,12 +512,16 @@ export default function Landing() {
             </div>
             {/* Documentation links list */}
             <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] overflow-hidden">
-              {['Getting Started', 'Connection Guide', 'SQL Console', 'API Reference', 'Analytics', 'Security'].map((doc, i) => (
-                <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#2B2D31] last:border-0 hover:bg-[#18181B] transition-colors cursor-pointer group">
+                {['Getting Started', 'Connection Guide', 'SQL Console', 'API Reference', 'Analytics', 'Security'].map((doc, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate('docs')}
+                  className="flex items-center gap-3 px-5 py-3.5 border-b border-[#2B2D31] last:border-0 hover:bg-[#18181B] transition-colors cursor-pointer group w-full text-left"
+                >
                   <BookOpen size={14} className="text-[#52525B] shrink-0" />
                   <span className="text-[14px] text-[#A1A1AA] group-hover:text-[#F5F5F5] transition-colors">{doc}</span>
                   <ChevronRight size={12} className="text-[#52525B] ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -569,7 +583,12 @@ export default function Landing() {
                 <ul className="space-y-2">
                   {col.links.map(link => (
                     <li key={link}>
-                      <span className="text-[13px] text-[#52525B] hover:text-[#A1A1AA] transition-colors cursor-pointer">{link}</span>
+                      <button
+                        onClick={['Documentation', 'API Reference', 'SDKs'].includes(link) ? () => navigate('docs') : undefined}
+                        className="text-[13px] text-[#52525B] hover:text-[#A1A1AA] transition-colors cursor-pointer text-left"
+                      >
+                        {link}
+                      </button>
                     </li>
                   ))}
                 </ul>
