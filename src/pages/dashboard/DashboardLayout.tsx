@@ -23,18 +23,34 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { Badge, type BadgeVariant } from '../../ds/Badge'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
   Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe,
 } from 'lucide-react'
 
-/** Sidebar navigation items. */
-const NAV_ITEMS = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
-  { to: '/dashboard/databases', icon: Database, label: 'Databases' },
-  { to: '/dashboard/n8n', icon: Workflow, label: 'N8N' },
-  { to: '/dashboard/apikeys', icon: KeyRound, label: 'API Keys' },
-  { to: '/dashboard/dns', icon: Globe, label: 'DNS' },
+/**
+ * Sidebar navigation items.
+ *
+ * `badge` marks modules that aren't fully available yet:
+ * - 'Mantenimiento' (warning) — Bases de datos, pausado temporalmente mientras
+ *   se resuelve el bug de whitelist de IP en MySQL (init_connect).
+ * - 'Pronto' (info) — IA como Servicio / Subdominios DNS: el backend ya
+ *   implementa el módulo completo, pero falta conectar la pieza externa real
+ *   (proveedor de IA / token de Cloudflare en producción).
+ */
+const NAV_ITEMS: {
+  to: string
+  icon: typeof LayoutDashboard
+  label: string
+  end?: boolean
+  badge?: { text: string; variant: BadgeVariant }
+}[] = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', end: true },
+  { to: '/dashboard/databases', icon: Database, label: 'Bases de datos', badge: { text: 'Mantenimiento', variant: 'warning' } },
+  { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
+  { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio', badge: { text: 'Pronto', variant: 'info' } },
+  { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS', badge: { text: 'Pronto', variant: 'info' } },
 ]
 
 export default function DashboardLayout() {
@@ -96,7 +112,16 @@ export default function DashboardLayout() {
               }
             >
               <item.icon size={16} className="shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <>
+                  <span className="truncate">{item.label}</span>
+                  {item.badge && (
+                    <Badge variant={item.badge.variant} size="xs" className="ml-auto shrink-0">
+                      {item.badge.text}
+                    </Badge>
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>

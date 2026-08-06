@@ -31,7 +31,7 @@ export default function AuthSuccess() {
       const ok = await confirmSession()
       if (cancelled) return
       if (ok) {
-        navigate('/mantenimiento', { replace: true })
+        navigate('/dashboard', { replace: true })
       } else {
         setError(true)
       }

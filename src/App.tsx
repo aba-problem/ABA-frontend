@@ -36,21 +36,29 @@ import AuthSuccess from './pages/auth/AuthSuccess'
 import AuthError from './pages/auth/AuthError'
 import DashboardLayout from './pages/dashboard/DashboardLayout'
 import DashboardOverview from './pages/dashboard/Overview'
+import SettingsPage from './pages/dashboard/SettingsPage'
+import N8nPage from './pages/dashboard/N8nPage'
+// TEMPORAL (previsualización local a pedido del usuario) — vuelven a importarse
+// para poder navegar TODAS las vistas reales sin depender de una sesión válida
+// contra producción (CORS solo permite el origen real de aba.andrescortes.dev,
+// así que un login OAuth completo no es posible desde localhost). Revertir a
+// FeatureNotice cuando termine la revisión — ver comentario junto a cada <Route>.
 import DatabasesPage from './pages/dashboard/DatabasesPage'
 import DatabaseDetailPage from './pages/dashboard/DatabaseDetailPage'
 import NewDatabasePage from './pages/dashboard/NewDatabasePage'
-import SettingsPage from './pages/dashboard/SettingsPage'
-import N8nPage from './pages/dashboard/N8nPage'
 import ApiKeysPage from './pages/dashboard/ApiKeysPage'
 import DnsPage from './pages/dashboard/DnsPage'
+// import FeatureNotice from './pages/dashboard/FeatureNotice' // reactivar al revertir
 import type { ReactNode } from 'react'
 
 // ─── Maintenance Mode ──────────────────────────────────────────────────────
-// Mientras sea `true`, tras el login y en todo el dashboard se muestra la
-// página de mantenimiento. Las páginas existentes siguen intactas, solo no
-// son accesibles hasta que se desactive (volver a `false`).
+// Interruptor de emergencia para un apagón TOTAL del dashboard (incidente
+// grave de plataforma). El estado normal es `false` — el control fino de
+// qué módulo está disponible se hace por-ruta más abajo (Bases de datos en
+// mantenimiento; IA como Servicio y DNS Autoservicio como "próximamente"),
+// no con este flag.
 
-const MAINTENANCE_MODE = true
+const MAINTENANCE_MODE = false
 
 // ─── Route Guards ──────────────────────────────────────────────────────────
 
@@ -62,6 +70,17 @@ const MAINTENANCE_MODE = true
  */
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { status } = useAuth()
+
+  // TEMPORAL (previsualización local) — salta el guard de auth en `npm run dev`
+  // para poder ver el dashboard completo sin una sesión real (imposible desde
+  // localhost: el backend de producción solo permite CORS/cookies desde el
+  // origen real del frontend). `import.meta.env.DEV` es `false` en cualquier
+  // build de producción, así que esto NUNCA se activa fuera de este preview.
+  // Revertir borrando este bloque cuando termine la revisión.
+  if (import.meta.env.DEV) {
+    return <>{children}</>
+  }
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
@@ -78,8 +97,8 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 /**
  * Restricts routes to guests only (e.g., login page).
  *
- * Redirects authenticated users to the maintenance page to prevent
- * viewing the login page while already logged in.
+ * Redirects authenticated users to the dashboard to prevent viewing the
+ * login page while already logged in.
  */
 function GuestRoute({ children }: { children: ReactNode }) {
   const { status } = useAuth()
@@ -91,7 +110,7 @@ function GuestRoute({ children }: { children: ReactNode }) {
     )
   }
   if (status === 'authenticated') {
-    return <Navigate to="/mantenimiento" replace />
+    return <Navigate to="/dashboard" replace />
   }
   return <>{children}</>
 }
@@ -144,6 +163,14 @@ export default function App() {
             }
           >
             <Route index element={<DashboardOverview />} />
+
+            {/* TEMPORAL: rutas reales restauradas para la previsualización local.
+                Estado real en producción (revertir a esto):
+                  <Route path="databases" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
+                  <Route path="databases/:id" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
+                  <Route path="new" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
+                  <Route path="apikeys" element={<FeatureNotice feature="IA como Servicio" mode="soon" .../>} />
+                  <Route path="dns" element={<FeatureNotice feature="Subdominios DNS" mode="soon" .../>} /> */}
             <Route path="databases" element={<DatabasesPage />} />
             <Route path="databases/:id" element={<DatabaseDetailPage />} />
             <Route path="new" element={<NewDatabasePage />} />

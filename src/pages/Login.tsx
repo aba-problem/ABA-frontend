@@ -40,7 +40,7 @@ export default function Login() {
     // This prevents the "repeat full login flow" issue seen in production logs.
     const sessionValid = await confirmSession()
     if (sessionValid) {
-      navigate('/mantenimiento', { replace: true })
+      navigate('/dashboard', { replace: true })
       return
     }
 
@@ -85,7 +85,7 @@ export default function Login() {
     const result = await devLogin()
     if (result.ok) {
       await confirmSession()
-      navigate('/mantenimiento', { replace: true })
+      navigate('/dashboard', { replace: true })
     } else {
       setRateLimitMsg(result.error.error)
     }
