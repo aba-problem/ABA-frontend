@@ -149,6 +149,22 @@ export function loginWithGithub(captchaToken?: string): Promise<LoginResult> {
   return probeLogin('github', captchaToken)
 }
 
+// ─── Dev Login (solo local) ────────────────────────────────────────────────
+
+/**
+ * Login de desarrollo sin OAuth. Solo existe en el backend en modo
+ * Development y solo desde localhost — en producción devuelve 404.
+ *
+ * El botón que lo usa solo se muestra con `import.meta.env.DEV` (Vite dev),
+ * así que nunca aparece en un build de producción.
+ *
+ * @see Login.tsx — botón "Dev login"
+ */
+export async function devLogin() {
+  await initCsrf()
+  return apiPost<unknown>('/auth/dev-login')
+}
+
 // ─── Session Management ────────────────────────────────────────────────────
 
 /**

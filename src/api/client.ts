@@ -105,6 +105,23 @@ function readXsrfToken(): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+// ─── Error Message Helpers ─────────────────────────────────────────────────
+
+/**
+ * Human-readable fallback for non-2xx responses that carry no JSON body
+ * (e.g. `NotFound()` in ASP.NET returns an empty body).
+ */
+function fallbackStatusMessage(status: number): string {
+  switch (status) {
+    case 400: return 'La solicitud es inválida.'
+    case 403: return 'No tienes permisos para realizar esta acción.'
+    case 404: return 'El recurso solicitado no existe.'
+    case 409: return 'El recurso ya existe.'
+    case 503: return 'El servicio no está disponible en este momento. Intenta de nuevo más tarde.'
+    default: return 'Ha ocurrido un error inesperado.'
+  }
+}
+
 // ─── Request Helpers ───────────────────────────────────────────────────────
 
 /**
@@ -238,24 +255,23 @@ async function apiRequest<T>(method: string, path: string, body?: unknown): Prom
     return { ok: false, error, status: 429 }
   }
 
-  // Parse JSON response body
-  let json: Record<string, unknown>
+  // Parse JSON response body (some errors like 404 from NotFound() have no body)
+  let json: Record<string, unknown> | null = null
   try {
     json = await res.json()
   } catch {
-    const error: ApiError = { error: 'Respuesta inválida del servidor.' }
-    return { ok: false, error, status: res.status }
+    json = null
   }
 
   // Non-2xx responses: extract error message and traceId
   if (!res.ok) {
     const error: ApiError = {
-      error: (json.error as string) || 'Ha ocurrido un error inesperado.',
-      traceId: json.traceId as string | undefined,
+      error: (json?.error as string) || fallbackStatusMessage(res.status),
+      traceId: json?.traceId as string | undefined,
     }
     return { ok: false, error, status: res.status }
   }
 
-  // Success: return parsed JSON
-  return { ok: true, data: json as T }
+  // Success: return parsed JSON (or undefined if there was no body)
+  return { ok: true, data: (json ?? undefined) as T }
 }

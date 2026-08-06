@@ -19,7 +19,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { loginWithGoogle, loginWithGithub } from '../api/auth'
+import { loginWithGoogle, loginWithGithub, devLogin } from '../api/auth'
 import TurnstileChallenge from '../components/TurnstileChallenge'
 import { Database, ArrowRight } from 'lucide-react'
 
@@ -40,7 +40,7 @@ export default function Login() {
     // This prevents the "repeat full login flow" issue seen in production logs.
     const sessionValid = await confirmSession()
     if (sessionValid) {
-      navigate('/dashboard', { replace: true })
+      navigate('/mantenimiento', { replace: true })
       return
     }
 
@@ -77,6 +77,19 @@ export default function Login() {
     setCaptchaRequired(false)
     setPendingProvider(null)
   }, [])
+
+  // Dev login: solo visible en desarrollo local (Vite). Crea una sesión sin OAuth
+  // vía POST /auth/dev-login (el backend solo lo acepta en Development + loopback).
+  const handleDevLogin = useCallback(async () => {
+    setRateLimitMsg(null)
+    const result = await devLogin()
+    if (result.ok) {
+      await confirmSession()
+      navigate('/mantenimiento', { replace: true })
+    } else {
+      setRateLimitMsg(result.error.error)
+    }
+  }, [confirmSession, navigate])
 
   if (status === 'loading') {
     return (
@@ -139,6 +152,18 @@ export default function Login() {
           {rateLimitMsg && (
             <div className="mt-4 rounded-[8px] bg-[#2A1C0A] border border-[#78350F] p-3 text-center">
               <p className="text-[13px] text-[#F59E0B]">{rateLimitMsg}</p>
+            </div>
+          )}
+
+          {/* Dev login — solo en desarrollo local */}
+          {import.meta.env.DEV && (
+            <div className="mt-4 pt-4 border-t border-[#2B2D31]">
+              <button
+                onClick={handleDevLogin}
+                className="w-full h-11 rounded-[10px] border border-dashed border-[#3F4146] bg-transparent text-[13px] font-medium text-[#52525B] hover:text-[#71717A] hover:border-[#52525B] transition-all duration-150 cursor-pointer"
+              >
+                Dev login (solo local)
+              </button>
             </div>
           )}
         </div>
