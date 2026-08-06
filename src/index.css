@@ -139,6 +139,68 @@
   --text-5xl:  48px;
 }
 
+/* ─── Theming (dashboard shell only — ver contexts/ThemeContext.tsx) ────
+   `data-theme` en <html> lo pone el script inline de index.html (evita el
+   flash del tema por defecto) y luego ThemeProvider lo mantiene sincronizado
+   con localStorage. Estas variables solo se referencian desde
+   DashboardLayout.tsx por ahora — Landing/Login se quedan con su look de
+   marca fijo a propósito (no dependen de estas variables). */
+
+:root,
+[data-theme='dark'] {
+  --aba-bg:                 #09090B;
+  --aba-bg-secondary:       #111217;
+  --aba-card:                #18181B;
+  --aba-card-hover:          #1C1C1F;
+  --aba-border:               #2B2D31;
+  --aba-border-subtle:        #1F2024;
+  --aba-text:                 #F5F5F5;
+  --aba-text-secondary:       #A1A1AA;
+  --aba-text-muted:           #71717A;
+  --aba-text-disabled:        #52525B;
+  --aba-accent:                #3B82F6;
+  --aba-accent-hover:          #2563EB;
+  --aba-accent-text:           #60A5FA;
+  --aba-accent-muted-bg:       #1E2D4A;
+  --aba-accent-muted-border:   #1E3A6E;
+}
+
+[data-theme='light'] {
+  --aba-bg:                 #FFFFFF;
+  --aba-bg-secondary:       #F7F7F8;
+  --aba-card:                #FFFFFF;
+  --aba-card-hover:          #F4F4F5;
+  --aba-border:               #E4E4E7;
+  --aba-border-subtle:        #ECECEE;
+  --aba-text:                 #18181B;
+  --aba-text-secondary:       #52525B;
+  --aba-text-muted:           #71717A;
+  --aba-text-disabled:        #A1A1AA;
+  --aba-accent:                #3B82F6;
+  --aba-accent-hover:          #2563EB;
+  --aba-accent-text:           #2563EB;
+  --aba-accent-muted-bg:       #DBEAFE;
+  --aba-accent-muted-border:   #BFDBFE;
+}
+
+[data-theme='dark-violet'] {
+  --aba-bg:                 #0B0710;
+  --aba-bg-secondary:       #140E1C;
+  --aba-card:                #1B1428;
+  --aba-card-hover:          #221A32;
+  --aba-border:               #2E2440;
+  --aba-border-subtle:        #251C36;
+  --aba-text:                 #F5F3F7;
+  --aba-text-secondary:       #C4B7D3;
+  --aba-text-muted:           #8A7A9C;
+  --aba-text-disabled:        #665A78;
+  --aba-accent:                #A855F7;
+  --aba-accent-hover:          #9333EA;
+  --aba-accent-text:           #C084FC;
+  --aba-accent-muted-bg:       #3B1E5C;
+  --aba-accent-muted-border:   #5B2E8C;
+}
+
 /* ─── Base ───────────────────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -150,8 +212,8 @@ html {
 }
 
 body {
-  background-color: #09090B;
-  color: #F5F5F5;
+  background-color: var(--aba-bg);
+  color: var(--aba-text);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;

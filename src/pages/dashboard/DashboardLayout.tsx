@@ -26,15 +26,14 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Badge, type BadgeVariant } from '../../ds/Badge'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe,
+  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, History,
 } from 'lucide-react'
 
 /**
  * Sidebar navigation items.
  *
  * `badge` marks modules that aren't fully available yet:
- * - 'Mantenimiento' (warning) — Bases de datos, pausado temporalmente mientras
- *   se resuelve el bug de whitelist de IP en MySQL (init_connect).
+ * - 'Mantenimiento' (warning) — Bases de datos y N8N, pausados temporalmente.
  * - 'Pronto' (info) — IA como Servicio / Subdominios DNS: el backend ya
  *   implementa el módulo completo, pero falta conectar la pieza externa real
  *   (proveedor de IA / token de Cloudflare en producción).
@@ -48,9 +47,10 @@ const NAV_ITEMS: {
 }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', end: true },
   { to: '/dashboard/databases', icon: Database, label: 'Bases de datos', badge: { text: 'Mantenimiento', variant: 'warning' } },
-  { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
+  { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N', badge: { text: 'Mantenimiento', variant: 'warning' } },
   { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio', badge: { text: 'Pronto', variant: 'info' } },
   { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS', badge: { text: 'Pronto', variant: 'info' } },
+  { to: '/dashboard/sesiones', icon: History, label: 'Registros de sesión' },
 ]
 
 export default function DashboardLayout() {
@@ -65,7 +65,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090B] flex">
+    <div className="min-h-screen bg-[var(--aba-bg)] flex">
       {mobileOpen && (
         <button
           aria-label="Cerrar navegación"
@@ -76,20 +76,20 @@ export default function DashboardLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`aba-sidebar fixed lg:sticky top-0 h-screen flex flex-col border-r border-[#2B2D31] bg-[#111217] z-40 transition-transform duration-200 ${
+        className={`aba-sidebar fixed lg:sticky top-0 h-screen flex flex-col border-r border-[var(--aba-border)] bg-[var(--aba-bg-secondary)] z-40 transition-transform duration-200 ${
           collapsed ? 'w-[60px]' : 'w-[240px]'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Logo */}
-        <div className="h-14 flex items-center gap-2.5 px-4 border-b border-[#2B2D31]">
-          <div className="w-7 h-7 rounded-[8px] bg-[#3B82F6] flex items-center justify-center shrink-0">
+        <div className="h-14 flex items-center gap-2.5 px-4 border-b border-[var(--aba-border)]">
+          <div className="w-7 h-7 rounded-[8px] bg-[var(--aba-accent)] flex items-center justify-center shrink-0">
             <span className="text-white text-[12px] font-bold">A</span>
           </div>
-          {!collapsed && <span className="text-[15px] font-semibold text-[#F5F5F5]">ABA</span>}
+          {!collapsed && <span className="text-[15px] font-semibold text-[var(--aba-text)]">ABA</span>}
           <button
             aria-label="Cerrar navegación"
             onClick={() => setMobileOpen(false)}
-            className="ml-auto w-8 h-8 rounded-[8px] text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#18181B] lg:hidden flex items-center justify-center"
+            className="ml-auto w-8 h-8 rounded-[8px] text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)] lg:hidden flex items-center justify-center"
           >
             <X size={16} />
           </button>
@@ -106,8 +106,8 @@ export default function DashboardLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all duration-150 ${
                   isActive
-                    ? 'bg-[#1E2D4A] text-[#60A5FA] border border-[#1E3A6E]'
-                    : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#18181B] border border-transparent'
+                    ? 'bg-[var(--aba-accent-muted-bg)] text-[var(--aba-accent-text)] border border-[var(--aba-accent-muted-border)]'
+                    : 'text-[var(--aba-text-secondary)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)] border border-transparent'
                 } ${collapsed ? 'justify-center' : ''}`
               }
             >
@@ -133,7 +133,7 @@ export default function DashboardLayout() {
               setMobileOpen(false)
               navigate('/dashboard/new')
             }}
-            className={`flex items-center gap-2.5 h-9 rounded-[8px] bg-[#3B82F6] text-[13px] font-medium text-white hover:bg-[#2563EB] transition-all duration-150 cursor-pointer w-full ${
+            className={`flex items-center gap-2.5 h-9 rounded-[8px] bg-[var(--aba-accent)] text-[13px] font-medium text-white hover:bg-[var(--aba-accent-hover)] transition-all duration-150 cursor-pointer w-full ${
               collapsed ? 'justify-center px-0' : 'px-3'
             }`}
           >
@@ -143,15 +143,15 @@ export default function DashboardLayout() {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-[#2B2D31] p-2 space-y-0.5">
+        <div className="border-t border-[var(--aba-border)] p-2 space-y-0.5">
           <NavLink
             to="/dashboard/settings"
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
                 isActive
-                  ? 'bg-[#18181B] text-[#F5F5F5]'
-                  : 'text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#18181B]'
+                  ? 'bg-[var(--aba-card)] text-[var(--aba-text)]'
+                  : 'text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)]'
               } ${collapsed ? 'justify-center' : ''}`
             }
           >
@@ -161,7 +161,7 @@ export default function DashboardLayout() {
 
           <button
             onClick={handleLogout}
-            className={`flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium text-[#71717A] hover:text-[#EF4444] hover:bg-[#2A1010] transition-all cursor-pointer w-full ${
+            className={`flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium text-[var(--aba-text-muted)] hover:text-[#EF4444] hover:bg-[#2A1010] transition-all cursor-pointer w-full ${
               collapsed ? 'justify-center' : ''
             }`}
           >
@@ -173,7 +173,7 @@ export default function DashboardLayout() {
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#18181B] border border-[#2B2D31] items-center justify-center text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-all cursor-pointer z-50"
+          className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full bg-[var(--aba-card)] border border-[var(--aba-border)] items-center justify-center text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card-hover)] transition-all cursor-pointer z-50"
         >
           {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </button>
@@ -182,11 +182,11 @@ export default function DashboardLayout() {
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 h-14 border-b border-[#2B2D31] bg-[#09090B]/80 backdrop-blur-md flex items-center justify-between px-6">
+        <header className="sticky top-0 z-30 h-14 border-b border-[var(--aba-border)] bg-[var(--aba-bg)]/80 backdrop-blur-md flex items-center justify-between px-6">
           <button
             aria-label="Abrir navegación"
             onClick={() => setMobileOpen(true)}
-            className="w-9 h-9 rounded-[9px] border border-[#2B2D31] bg-[#111217] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#18181B] lg:hidden flex items-center justify-center"
+            className="w-9 h-9 rounded-[9px] border border-[var(--aba-border)] bg-[var(--aba-bg-secondary)] text-[var(--aba-text-secondary)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)] lg:hidden flex items-center justify-center"
           >
             <Menu size={17} />
           </button>
@@ -196,7 +196,7 @@ export default function DashboardLayout() {
               href="https://aba.andrescortes.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[13px] text-[#71717A] hover:text-[#A1A1AA] transition-colors"
+              className="flex items-center gap-1.5 text-[13px] text-[var(--aba-text-muted)] hover:text-[var(--aba-text-secondary)] transition-colors"
             >
               <ExternalLink size={13} />
               Main site
@@ -209,13 +209,13 @@ export default function DashboardLayout() {
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-[#1E2D4A] border border-[#1E3A6E] flex items-center justify-center">
-                    <span className="text-[11px] font-semibold text-[#60A5FA]">
+                  <div className="w-7 h-7 rounded-full bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center">
+                    <span className="text-[11px] font-semibold text-[var(--aba-accent-text)]">
                       {user.nombre?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                 )}
-                <span className="text-[13px] text-[#A1A1AA] hidden sm:inline group-hover:text-[#F5F5F5] transition-colors">{user.nombre}</span>
+                <span className="text-[13px] text-[var(--aba-text-secondary)] hidden sm:inline group-hover:text-[var(--aba-text)] transition-colors">{user.nombre}</span>
               </button>
             )}
           </div>

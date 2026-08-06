@@ -5,8 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ABA — Databases for every builder</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <script type="module" crossorigin src="/assets/index-ErRN_Tbg.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-D8viHxz7.css">
+    <script>
+      // Aplica el tema guardado ANTES de que React monte, para evitar un
+      // parpadeo al tema oscuro por defecto en cada carga de página.
+      (function () {
+        try {
+          var t = localStorage.getItem('aba-theme');
+          document.documentElement.setAttribute('data-theme', t === 'light' || t === 'dark-violet' ? t : 'dark');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-B8B0-PJr.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-MsL_rVkK.css">
   </head>
   <body>
     <div id="root"></div>

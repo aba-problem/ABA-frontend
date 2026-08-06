@@ -37,18 +37,11 @@ import AuthError from './pages/auth/AuthError'
 import DashboardLayout from './pages/dashboard/DashboardLayout'
 import DashboardOverview from './pages/dashboard/Overview'
 import SettingsPage from './pages/dashboard/SettingsPage'
-import N8nPage from './pages/dashboard/N8nPage'
-// TEMPORAL (previsualización local a pedido del usuario) — vuelven a importarse
-// para poder navegar TODAS las vistas reales sin depender de una sesión válida
-// contra producción (CORS solo permite el origen real de aba.andrescortes.dev,
-// así que un login OAuth completo no es posible desde localhost). Revertir a
-// FeatureNotice cuando termine la revisión — ver comentario junto a cada <Route>.
 import DatabasesPage from './pages/dashboard/DatabasesPage'
 import DatabaseDetailPage from './pages/dashboard/DatabaseDetailPage'
 import NewDatabasePage from './pages/dashboard/NewDatabasePage'
-import ApiKeysPage from './pages/dashboard/ApiKeysPage'
-import DnsPage from './pages/dashboard/DnsPage'
-// import FeatureNotice from './pages/dashboard/FeatureNotice' // reactivar al revertir
+import SessionsPage from './pages/dashboard/SessionsPage'
+import FeatureNotice from './pages/dashboard/FeatureNotice'
 import type { ReactNode } from 'react'
 
 // ─── Maintenance Mode ──────────────────────────────────────────────────────
@@ -70,16 +63,6 @@ const MAINTENANCE_MODE = false
  */
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { status } = useAuth()
-
-  // TEMPORAL (previsualización local) — salta el guard de auth en `npm run dev`
-  // para poder ver el dashboard completo sin una sesión real (imposible desde
-  // localhost: el backend de producción solo permite CORS/cookies desde el
-  // origen real del frontend). `import.meta.env.DEV` es `false` en cualquier
-  // build de producción, así que esto NUNCA se activa fuera de este preview.
-  // Revertir borrando este bloque cuando termine la revisión.
-  if (import.meta.env.DEV) {
-    return <>{children}</>
-  }
 
   if (status === 'loading') {
     return (
@@ -164,19 +147,24 @@ export default function App() {
           >
             <Route index element={<DashboardOverview />} />
 
-            {/* TEMPORAL: rutas reales restauradas para la previsualización local.
-                Estado real en producción (revertir a esto):
-                  <Route path="databases" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
-                  <Route path="databases/:id" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
-                  <Route path="new" element={<FeatureNotice feature="Bases de datos" mode="maintenance" />} />
-                  <Route path="apikeys" element={<FeatureNotice feature="IA como Servicio" mode="soon" .../>} />
-                  <Route path="dns" element={<FeatureNotice feature="Subdominios DNS" mode="soon" .../>} /> */}
+            {/* Bases de datos: listado/detalle siguen funcionando (solo lectura de
+                metadata en ABA_Control, no toca el bug de whitelist MySQL). La
+                creación en sí queda deshabilitada dentro de NewDatabasePage (los
+                dos motores se muestran en gris, "En mantenimiento", no seleccionables). */}
             <Route path="databases" element={<DatabasesPage />} />
             <Route path="databases/:id" element={<DatabaseDetailPage />} />
             <Route path="new" element={<NewDatabasePage />} />
-            <Route path="n8n" element={<N8nPage />} />
-            <Route path="apikeys" element={<ApiKeysPage />} />
-            <Route path="dns" element={<DnsPage />} />
+
+            {/* N8N — en mantenimiento (mismo criterio que Bases de datos). */}
+            <Route path="n8n" element={<FeatureNotice feature="Automatización N8N" mode="maintenance" />} />
+
+            {/* IA como Servicio y DNS Autoservicio — backend funcional pero sin las
+                piezas externas reales conectadas todavía (proveedor de IA / token de
+                Cloudflare en el .env de producción). */}
+            <Route path="apikeys" element={<FeatureNotice feature="IA como Servicio" mode="soon" detail="La gestión de API keys ya funciona; la llamada real a un proveedor de IA está pendiente." />} />
+            <Route path="dns" element={<FeatureNotice feature="Subdominios DNS" mode="soon" detail="Pendiente de cargar el token de Cloudflare en el servidor de producción." />} />
+
+            <Route path="sesiones" element={<SessionsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 

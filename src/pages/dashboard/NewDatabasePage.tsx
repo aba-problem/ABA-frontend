@@ -23,6 +23,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createDatabase } from '../../api/provisioning'
 import { Button } from '../../ds/Button'
+import { Badge } from '../../ds/Badge'
 import { Modal } from '../../ds/Modal'
 import {
   Database, ArrowLeft, Copy, Check, Terminal,
@@ -31,18 +32,24 @@ import {
 /** Supported database engine types. */
 type Motor = 'MySQL' | 'SQLServer'
 
-const ENGINES: { value: Motor; label: string; desc: string; color: string }[] = [
+// Ambos motores en mantenimiento temporal (bug de whitelist de IP en MySQL
+// bajo diagnóstico; SQL Server se pausa junto con MySQL por consistencia del
+// mensaje al usuario, no porque tenga el mismo bug). Para reactivar un motor,
+// cambia su `disabled` a `false` — el resto del flujo de creación ya funciona.
+const ENGINES: { value: Motor; label: string; desc: string; color: string; disabled: boolean }[] = [
   {
     value: 'MySQL',
     label: 'MySQL 8.0',
     desc: 'World\'s most popular open-source database. Great for web apps.',
     color: '#3B82F6',
+    disabled: true,
   },
   {
     value: 'SQLServer',
     label: 'SQL Server',
     desc: 'Microsoft\'s enterprise-grade relational database engine.',
     color: '#A855F7',
+    disabled: true,
   },
 ]
 
@@ -96,27 +103,33 @@ export default function NewDatabasePage() {
         {ENGINES.map(engine => (
           <button
             key={engine.value}
-            onClick={() => setSelected(engine.value)}
-            className={`group rounded-[14px] border p-6 text-left transition-all duration-200 cursor-pointer ${
-              selected === engine.value
-                ? 'border-[#3B82F6] bg-[#1E2D4A]/50 shadow-[0_0_30px_rgba(59,130,246,0.1)]'
-                : 'border-[#2B2D31] bg-[#18181B] hover:border-[#3F4146] hover:bg-[#1C1C1F]'
+            disabled={engine.disabled}
+            onClick={() => !engine.disabled && setSelected(engine.value)}
+            className={`group rounded-[14px] border p-6 text-left transition-all duration-200 ${
+              engine.disabled
+                ? 'border-[#2B2D31] bg-[#18181B] opacity-50 grayscale cursor-not-allowed'
+                : selected === engine.value
+                  ? 'border-[#3B82F6] bg-[#1E2D4A]/50 shadow-[0_0_30px_rgba(59,130,246,0.1)] cursor-pointer'
+                  : 'border-[#2B2D31] bg-[#18181B] hover:border-[#3F4146] hover:bg-[#1C1C1F] cursor-pointer'
             }`}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div
-                className="w-10 h-10 rounded-[10px] flex items-center justify-center"
-                style={{ backgroundColor: `${engine.color}18`, border: `1px solid ${engine.color}30` }}
-              >
-                <Database size={18} style={{ color: engine.color }} />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-[10px] flex items-center justify-center"
+                  style={{ backgroundColor: engine.disabled ? '#27272A' : `${engine.color}18`, border: `1px solid ${engine.disabled ? '#2B2D31' : `${engine.color}30`}` }}
+                >
+                  <Database size={18} style={{ color: engine.disabled ? '#71717A' : engine.color }} />
+                </div>
+                <div>
+                  <p className={`text-[15px] font-semibold ${engine.disabled ? 'text-[#71717A]' : 'text-[#F5F5F5]'}`}>{engine.label}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[15px] font-semibold text-[#F5F5F5]">{engine.label}</p>
-              </div>
+              {engine.disabled && <Badge variant="warning" size="xs">En mantenimiento</Badge>}
             </div>
             <p className="text-[13px] text-[#71717A]">{engine.desc}</p>
 
-            {selected === engine.value && (
+            {!engine.disabled && selected === engine.value && (
               <div className="mt-3 flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-[#3B82F6]" />
                 <span className="text-[11px] text-[#3B82F6] font-medium">Selected</span>
@@ -126,11 +139,11 @@ export default function NewDatabasePage() {
         ))}
       </div>
 
-      {/* Rate limit info */}
-      <div className="rounded-[10px] border border-[#2B2D31] bg-[#111217] p-4 flex items-center gap-3">
-        <Terminal size={14} className="text-[#71717A] shrink-0" />
-        <p className="text-[12px] text-[#71717A]">
-          Límite: 1 creación de base de datos cada 10 minutos.
+      {/* Maintenance notice — both engines disabled */}
+      <div className="rounded-[10px] border border-[#422006] bg-[#2A2008] p-4 flex items-center gap-3">
+        <Terminal size={14} className="text-[#EAB308] shrink-0" />
+        <p className="text-[12px] text-[#FCD34D]">
+          La creación de bases de datos está temporalmente en mantenimiento para ambos motores. Vuelve a intentarlo más tarde.
         </p>
       </div>
 

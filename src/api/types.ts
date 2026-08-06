@@ -350,3 +350,27 @@ export interface DnsRegistroReserva {
   /** Target value. */
   valor: string
 }
+
+// ─── Session Records ──────────────────────────────────────────────────────
+
+/**
+ * A single access log entry as returned by `GET /sesiones`.
+ *
+ * Mirrors `SesionRegistroDto.cs` — reads from the existing `Auditoria` table,
+ * no new backend table. `accion` is one of 'LOGIN' | 'REGISTRO' |
+ * 'IP_VALIDADA' | 'IP_RECHAZADA'.
+ */
+export interface SesionRegistro {
+  /** Audit row ID. */
+  id: number
+  /** Entity the event applies to: 'Usuario' or 'UsuarioIp'. */
+  entidad: string
+  /** Event type. */
+  accion: string
+  /** Origin IP for this event, or null. */
+  ipOrigen: string | null
+  /** Event timestamp (ISO format). */
+  fechaEvento: string
+  /** Raw JSON detail from the backend, or null. */
+  detalle: string | null
+}
