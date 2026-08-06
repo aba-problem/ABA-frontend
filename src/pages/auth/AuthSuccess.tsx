@@ -7,7 +7,7 @@
  * already set by the backend at this point.
  *
  * Calls {@link confirmSession} to refresh the cookie session. On success, navigates to
- * `/dashboard`. On failure, shows an error with a retry link.
+ * `/mantenimiento`. On failure, shows an error with a retry link.
  *
  * Uses a cleanup ref to prevent state updates on unmounted components
  * (race condition between the async call and navigation).
@@ -31,7 +31,7 @@ export default function AuthSuccess() {
       const ok = await confirmSession()
       if (cancelled) return
       if (ok) {
-        navigate('/dashboard', { replace: true })
+        navigate('/mantenimiento', { replace: true })
       } else {
         setError(true)
       }

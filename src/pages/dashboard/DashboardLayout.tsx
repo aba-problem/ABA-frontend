@@ -25,13 +25,16 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink, Menu, X,
+  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe,
 } from 'lucide-react'
 
 /** Sidebar navigation items. */
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
   { to: '/dashboard/databases', icon: Database, label: 'Databases' },
+  { to: '/dashboard/n8n', icon: Workflow, label: 'N8N' },
+  { to: '/dashboard/apikeys', icon: KeyRound, label: 'API Keys' },
+  { to: '/dashboard/dns', icon: Globe, label: 'DNS' },
 ]
 
 export default function DashboardLayout() {

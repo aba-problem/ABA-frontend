@@ -209,4 +209,144 @@ export interface Usuario {
   fechaCreacion: string
   /** Last login timestamp, or null. */
   ultimoLogin: string | null
+  /** Entregable 3 — controls access to /admin/dns. Decided only by the backend. */
+  esAdmin: boolean
+}
+
+// ─── N8N Workspace Types ─────────────────────────────────────────────────
+
+/**
+ * A user's N8N workspace as returned by `GET /n8n/mi-workspace`.
+ *
+ * Mirrors `N8nWorkspaceDto.cs`. Never includes the password.
+ */
+export interface N8nWorkspace {
+  /** Workspace ID. */
+  id: number
+  /** Auto-generated workspace name. */
+  nombreWorkspace: string
+  /** Maximum number of workflows allowed. */
+  limiteWorkflows: number
+  /** Monthly execution limit. */
+  limiteEjecucionesMes: number
+  /** Workspace status. */
+  estado: string
+  /** Creation timestamp (ISO format). */
+  fechaCreacion: string
+}
+
+/**
+ * Result of a successful N8N workspace creation.
+ *
+ * Mirrors `N8nWorkspaceCreadoDto.cs`. `passwordTemporal` is returned ONLY
+ * once — it cannot be retrieved again, so it must be shown immediately.
+ */
+export interface N8nWorkspaceCreado {
+  /** Workspace ID. */
+  id: number
+  /** Auto-generated workspace name. */
+  nombreWorkspace: string
+  /** One-time workspace password. */
+  passwordTemporal: string
+  /** Maximum number of workflows allowed. */
+  limiteWorkflows: number
+  /** Monthly execution limit. */
+  limiteEjecucionesMes: number
+}
+
+// ─── API Keys Types ──────────────────────────────────────────────────────
+
+/**
+ * A single API key as returned by `GET /apikeys`.
+ *
+ * Mirrors `ApiKeyDto.cs`. Only the `prefijo` is exposed — the full key is
+ * hashed server-side and can never be retrieved again.
+ */
+export interface ApiKey {
+  /** API key ID. */
+  id: number
+  /** Readable prefix of the key (never the full key). */
+  prefijo: string
+  /** Whether the key is still active. */
+  activa: boolean
+  /** Creation timestamp (ISO format). */
+  fechaCreacion: string
+  /** Revocation timestamp, or null if still active. */
+  fechaRevocacion: string | null
+  /** Last usage timestamp, or null if never used. */
+  ultimoUso: string | null
+}
+
+/**
+ * Result of a successful API key creation.
+ *
+ * Mirrors `ApiKeyCreadaDto.cs`. `keyCompleta` is returned ONLY once.
+ */
+export interface ApiKeyCreada {
+  /** API key ID. */
+  id: number
+  /** Readable prefix of the key. */
+  prefijo: string
+  /** Full key — shown once and never again. */
+  keyCompleta: string
+  /** Creation timestamp (ISO format). */
+  fechaCreacion: string
+}
+
+/**
+ * Daily API key consumption for the last 30 days.
+ *
+ * Mirrors `ApiKeyConsumoDiaDto.cs`.
+ */
+export interface ApiKeyConsumoDia {
+  /** Day (ISO date). */
+  dia: string
+  /** Number of calls that day. */
+  llamadas: number
+  /** Total estimated tokens that day. */
+  tokensTotales: number
+}
+
+// ─── DNS Types ───────────────────────────────────────────────────────────
+
+/**
+ * A DNS record as returned by `GET /dns/mis-registros` (and `/admin/dns`).
+ *
+ * Mirrors `DnsRegistroDto.cs`. `usuarioId`/`usuarioCorreo` are only populated
+ * in the admin listing.
+ */
+export interface DnsRegistro {
+  /** Record ID. */
+  id: number
+  /** Owning user ID (admin listing only). */
+  usuarioId: number | null
+  /** Owning user email (admin listing only). */
+  usuarioCorreo: string | null
+  /** Subdomain (e.g. "app"). */
+  subdominio: string
+  /** Record type: 'A' or 'CNAME'. */
+  tipoRegistro: string
+  /** Target value (IP for A, hostname for CNAME). */
+  valor: string
+  /** Record status. */
+  estado: string
+  /** Creation timestamp (ISO format). */
+  fechaCreacion: string
+}
+
+/**
+ * Result of the DNS creation first phase.
+ *
+ * Mirrors `DnsRegistroReservaDto.cs`. Also returned by the delete endpoints
+ * so the backend can clean up the real provider.
+ */
+export interface DnsRegistroReserva {
+  /** Record ID. */
+  id: number
+  /** Subdomain (e.g. "app"). */
+  subdominio: string
+  /** Record type: 'A' or 'CNAME'. */
+  tipoRegistro: string
+  /** Target value. */
+  valor: string
 }
