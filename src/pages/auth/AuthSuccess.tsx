@@ -7,7 +7,7 @@
  * already set by the backend at this point.
  *
  * Calls {@link confirmSession} to refresh the cookie session. On success, navigates to
- * `/mantenimiento`. On failure, shows an error with a retry link.
+ * `/dashboard`. On failure, shows an error with a retry link.
  *
  * Uses a cleanup ref to prevent state updates on unmounted components
  * (race condition between the async call and navigation).

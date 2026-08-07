@@ -17,16 +17,19 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 
-export type Theme = 'dark' | 'light' | 'dark-violet'
+export type Theme = 'dark' | 'light' | 'dark-violet' | 'dark-emerald' | 'light-violet' | 'midnight'
 
 export const THEME_OPTIONS: { value: Theme; label: string; swatch: [string, string, string] }[] = [
   { value: 'dark', label: 'Oscuro', swatch: ['#09090B', '#18181B', '#3B82F6'] },
   { value: 'light', label: 'Claro', swatch: ['#FFFFFF', '#F4F4F5', '#3B82F6'] },
-  { value: 'dark-violet', label: 'Oscuro (violeta)', swatch: ['#0B0710', '#1B1428', '#A855F7'] },
+  { value: 'dark-violet', label: 'Oscuro violeta', swatch: ['#0B0710', '#1B1428', '#A855F7'] },
+  { value: 'dark-emerald', label: 'Oscuro esmeralda', swatch: ['#08110D', '#122019', '#10B981'] },
+  { value: 'light-violet', label: 'Claro violeta', swatch: ['#FDFCFF', '#F5F1FB', '#8B5CF6'] },
+  { value: 'midnight', label: 'Medianoche', swatch: ['#05070D', '#0D1220', '#22D3EE'] },
 ]
 
 const STORAGE_KEY = 'aba-theme'
-const VALID: readonly Theme[] = ['dark', 'light', 'dark-violet']
+const VALID: readonly Theme[] = ['dark', 'light', 'dark-violet', 'dark-emerald', 'light-violet', 'midnight']
 
 function readInitialTheme(): Theme {
   try {

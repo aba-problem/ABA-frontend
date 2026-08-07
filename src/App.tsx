@@ -5,12 +5,10 @@
  * Defines the complete route structure and authentication guards:
  *
  * - `/` — Public landing page (no auth required)
- * - `/login` — OAuth login page (redirects to maintenance if already authenticated)
- * - `/auth/success` — OAuth callback handler (confirms session, redirects to maintenance)
+ * - `/login` — OAuth login page (redirects to dashboard if already authenticated)
+ * - `/auth/success` — OAuth callback handler (confirms session, redirects to dashboard)
  * - `/auth/error` — OAuth failure page (shows error, links back to login)
- * - `/mantenimiento` — Maintenance page (shown after login while MAINTENANCE_MODE is on)
- * - `/dashboard` — Protected dashboard shell (requires authentication; blocked while
- *   maintenance mode is active)
+ * - `/dashboard` — Protected dashboard shell (requires authentication)
  *   - `/dashboard` — Overview with stats and recent databases
  *   - `/dashboard/databases` — Full database list with search
  *   - `/dashboard/databases/:id` — Database detail with credentials
@@ -20,9 +18,11 @@
  * ## Auth Guards
  *
  * - `ProtectedRoute`: Redirects unauthenticated users to `/login`
- * - `GuestRoute`: Redirects authenticated users to `/mantenimiento`
- * - `MaintenanceGuard`: Redirects all dashboard routes to `/mantenimiento` while
- *   maintenance mode is active
+ * - `GuestRoute`: Redirects authenticated users to `/dashboard`
+ *
+ * No hay un apagón total tipo "modo mantenimiento" a nivel de app — el
+ * control de qué módulo está disponible se hace por-ruta (`FeatureNotice` en
+ * Bases de datos/N8N/IA/DNS más abajo).
  *
  * @see contexts/AuthContext.tsx — The auth state provider
  */
@@ -31,7 +31,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
-import Maintenance from './pages/Maintenance'
 import AuthSuccess from './pages/auth/AuthSuccess'
 import AuthError from './pages/auth/AuthError'
 import DashboardLayout from './pages/dashboard/DashboardLayout'
@@ -43,15 +42,6 @@ import NewDatabasePage from './pages/dashboard/NewDatabasePage'
 import SessionsPage from './pages/dashboard/SessionsPage'
 import FeatureNotice from './pages/dashboard/FeatureNotice'
 import type { ReactNode } from 'react'
-
-// ─── Maintenance Mode ──────────────────────────────────────────────────────
-// Interruptor de emergencia para un apagón TOTAL del dashboard (incidente
-// grave de plataforma). El estado normal es `false` — el control fino de
-// qué módulo está disponible se hace por-ruta más abajo (Bases de datos en
-// mantenimiento; IA como Servicio y DNS Autoservicio como "próximamente"),
-// no con este flag.
-
-const MAINTENANCE_MODE = false
 
 // ─── Route Guards ──────────────────────────────────────────────────────────
 
@@ -98,16 +88,6 @@ function GuestRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/**
- * Blocks all dashboard routes while maintenance mode is active.
- */
-function MaintenanceGuard({ children }: { children: ReactNode }) {
-  if (MAINTENANCE_MODE) {
-    return <Navigate to="/mantenimiento" replace />
-  }
-  return <>{children}</>
-}
-
 // ─── App Component ─────────────────────────────────────────────────────────
 
 /**
@@ -131,17 +111,12 @@ export default function App() {
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/auth/error" element={<AuthError />} />
 
-          {/* ─── Maintenance ───────────────────────────────────── */}
-          <Route path="/mantenimiento" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
-
           {/* ─── Protected Dashboard ───────────────────────────── */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <MaintenanceGuard>
-                  <DashboardLayout />
-                </MaintenanceGuard>
+                <DashboardLayout />
               </ProtectedRoute>
             }
           >

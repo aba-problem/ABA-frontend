@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme, THEME_OPTIONS } from '../../contexts/ThemeContext'
 import { getProfile } from '../../api/dashboard'
 import { SkeletonCard } from '../../ds/Skeleton'
-import { User, Mail, Shield, Calendar, Clock, Check, Palette } from 'lucide-react'
+import { User, Mail, Shield, Calendar, Clock, Check, Palette, History } from 'lucide-react'
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -68,7 +69,7 @@ function AppearanceSection() {
                 </div>
                 {active && <Check size={14} style={{ color: opt.swatch[2] }} />}
               </div>
-              <span className="text-[12px] font-medium" style={{ color: opt.value === 'light' ? '#18181B' : '#F5F5F5' }}>
+              <span className="text-[12px] font-medium" style={{ color: opt.value.startsWith('light') ? '#18181B' : '#F5F5F5' }}>
                 {opt.label}
               </span>
             </button>
@@ -143,6 +144,20 @@ export default function SettingsPage() {
             <ProfileRow icon={Calendar} label="Account created" value={formatDate(user.fechaCreacion)} color="#EAB308" />
             <ProfileRow icon={Clock} label="Last login" value={formatDate(user.ultimoLogin)} color="#F97316" />
           </div>
+
+          {/* Security — link to the session/access history view */}
+          <NavLink
+            to="/dashboard/sesiones"
+            className="flex items-center gap-4 rounded-[14px] border border-[var(--aba-border)] bg-[var(--aba-card)] p-5 hover:border-[var(--aba-text-muted)] transition-all"
+          >
+            <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0" style={{ backgroundColor: '#3B82F618', border: '1px solid #3B82F630' }}>
+              <History size={15} style={{ color: '#3B82F6' }} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-medium text-[var(--aba-text)]">Registros de sesión</p>
+              <p className="text-[12px] text-[var(--aba-text-muted)]">Últimos accesos e IPs autorizadas de tu cuenta</p>
+            </div>
+          </NavLink>
         </div>
       )}
     </div>

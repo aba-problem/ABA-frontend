@@ -9,9 +9,10 @@
       // Aplica el tema guardado ANTES de que React monte, para evitar un
       // parpadeo al tema oscuro por defecto en cada carga de página.
       (function () {
+        var valid = ['dark', 'light', 'dark-violet', 'dark-emerald', 'light-violet', 'midnight'];
         try {
           var t = localStorage.getItem('aba-theme');
-          document.documentElement.setAttribute('data-theme', t === 'light' || t === 'dark-violet' ? t : 'dark');
+          document.documentElement.setAttribute('data-theme', valid.indexOf(t) !== -1 ? t : 'dark');
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'dark');
         }

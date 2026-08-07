@@ -201,6 +201,60 @@
   --aba-accent-muted-border:   #5B2E8C;
 }
 
+[data-theme='dark-emerald'] {
+  --aba-bg:                 #08110D;
+  --aba-bg-secondary:       #0E1A14;
+  --aba-card:                #122019;
+  --aba-card-hover:          #17291F;
+  --aba-border:               #1E3529;
+  --aba-border-subtle:        #182B21;
+  --aba-text:                 #F1F7F4;
+  --aba-text-secondary:       #A9C3B5;
+  --aba-text-muted:           #6E8F7C;
+  --aba-text-disabled:        #52705F;
+  --aba-accent:                #10B981;
+  --aba-accent-hover:          #059669;
+  --aba-accent-text:           #34D399;
+  --aba-accent-muted-bg:       #0F3D2C;
+  --aba-accent-muted-border:   #146341;
+}
+
+[data-theme='light-violet'] {
+  --aba-bg:                 #FDFCFF;
+  --aba-bg-secondary:       #F5F1FB;
+  --aba-card:                #FFFFFF;
+  --aba-card-hover:          #F1EAFB;
+  --aba-border:               #E6DEF7;
+  --aba-border-subtle:        #EEE7FA;
+  --aba-text:                 #201A2E;
+  --aba-text-secondary:       #5B5170;
+  --aba-text-muted:           #7C7092;
+  --aba-text-disabled:        #A79BC0;
+  --aba-accent:                #8B5CF6;
+  --aba-accent-hover:          #7C3AED;
+  --aba-accent-text:           #7C3AED;
+  --aba-accent-muted-bg:       #EDE4FD;
+  --aba-accent-muted-border:   #D9C8FA;
+}
+
+[data-theme='midnight'] {
+  --aba-bg:                 #05070D;
+  --aba-bg-secondary:       #0A0E18;
+  --aba-card:                #0D1220;
+  --aba-card-hover:          #121829;
+  --aba-border:               #1B2438;
+  --aba-border-subtle:        #151D2E;
+  --aba-text:                 #EAF2F8;
+  --aba-text-secondary:       #9AAFC4;
+  --aba-text-muted:           #64778C;
+  --aba-text-disabled:        #4A5A6D;
+  --aba-accent:                #22D3EE;
+  --aba-accent-hover:          #06B6D4;
+  --aba-accent-text:           #67E8F9;
+  --aba-accent-muted-bg:       #0E3A44;
+  --aba-accent-muted-border:   #135A68;
+}
+
 /* ─── Base ───────────────────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; }
