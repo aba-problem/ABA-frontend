@@ -19,10 +19,13 @@
  *
  * - `ProtectedRoute`: Redirects unauthenticated users to `/login`
  * - `GuestRoute`: Redirects authenticated users to `/dashboard`
+<<<<<<< HEAD
  *
  * No hay un apagón total tipo "modo mantenimiento" a nivel de app — el
  * control de qué módulo está disponible se hace por-ruta (`FeatureNotice` en
  * Bases de datos/N8N/IA/DNS más abajo).
+=======
+>>>>>>> a6a1c5f (add: new routes and functionalities connected with the backend)
  *
  * @see contexts/AuthContext.tsx — The auth state provider
  */
