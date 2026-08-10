@@ -304,6 +304,12 @@ export default function DatabaseDetailPage() {
                   <p className="text-[#A1A1AA] break-all">
                     {buildConnectionString({ ...cred, password: '•'.repeat(8) })}
                   </p>
+                  <p className="text-[11px] text-[#52525B] mt-2 font-sans normal-case">
+                    Para tu código (.env / appsettings). En clientes gráficos como DBeaver usá la
+                    pestaña <strong className="text-[#71717A]">Host</strong> (no "URL") con los
+                    campos individuales de arriba — el formato de URL de conexión varía por
+                    herramienta y no hay un único string que sirva para todas.
+                  </p>
                 </div>
 
                 <div className="rounded-[10px] border border-[#2B2D31] bg-[#09090B] p-4">
