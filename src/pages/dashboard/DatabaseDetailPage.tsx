@@ -109,14 +109,23 @@ export default function DatabaseDetailPage() {
     setCredLoading(false)
   }, [id, credLoading])
 
+  const buildConnectionString = useCallback((c: Credencial) => {
+    // Formato ADO.NET "Server=...;" en vez de un URI tipo mysql:// — es el que
+    // entienden directo SSMS/Azure Data Studio/Microsoft.Data.SqlClient para
+    // SQL Server (sqlserver:// no es un formato real que esas herramientas
+    // parseen) y el que usa MySqlConnector/.NET para MySQL. TrustServerCertificate
+    // es necesario en SQL Server porque el motor usa un certificado autofirmado.
+    return c.motor === 'MySQL'
+      ? `Server=${c.host};Port=${c.puerto};Database=${c.nombreBD};Uid=${c.usuarioBD};Pwd=${c.password};`
+      : `Server=${c.host},${c.puerto};Database=${c.nombreBD};User Id=${c.usuarioBD};Password=${c.password};TrustServerCertificate=True;Encrypt=True;`
+  }, [])
+
   const copyConnectionString = useCallback(() => {
     if (!cred) return
-    const scheme = cred.motor === 'MySQL' ? 'mysql' : 'sqlserver'
-    const connStr = `${scheme}://${cred.usuarioBD}:${cred.password}@${cred.host}:${cred.puerto}/${cred.nombreBD}`
-    navigator.clipboard.writeText(connStr)
+    navigator.clipboard.writeText(buildConnectionString(cred))
     setCopiedConn(true)
     setTimeout(() => setCopiedConn(false), 2000)
-  }, [cred])
+  }, [cred, buildConnectionString])
 
   const handleDelete = useCallback(async () => {
     if (!id || deleting) return
@@ -293,13 +302,7 @@ export default function DatabaseDetailPage() {
                     </button>
                   </div>
                   <p className="text-[#A1A1AA] break-all">
-                    <span className="text-[#60A5FA]">{cred.usuarioBD}</span>
-                    <span className="text-[#52525B]">@</span>
-                    <span className="text-[#A1A1AA]">{cred.host}</span>
-                    <span className="text-[#52525B]">:</span>
-                    <span className="text-[#A1A1AA]">{cred.puerto}</span>
-                    <span className="text-[#52525B]">/</span>
-                    <span className="text-[#A1A1AA]">{cred.nombreBD}</span>
+                    {buildConnectionString({ ...cred, password: '•'.repeat(8) })}
                   </p>
                 </div>
 
