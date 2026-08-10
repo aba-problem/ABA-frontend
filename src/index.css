@@ -347,7 +347,16 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .aba-page-transition {
-  animation: aba-page-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Sin "both": con fill-mode both/forwards, el transform final (translateY(0))
+     queda aplicado permanentemente después de terminar la animación. Un transform
+     activo en un ancestro — aunque sea translateY(0) — lo convierte en el
+     contenedor de posicionamiento para sus descendientes `position: fixed`, así
+     que cualquier modal renderizado dentro de <main> (ds/Modal.tsx no usa portal)
+     terminaba fijado contra este elemento en vez del viewport. Sin "both" el
+     transform vuelve a "none" apenas termina la animación (0.2s, sin delay, así
+     que no hay flash visible al inicio).
+  */
+  animation: aba-page-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ─── Modal enter/exit ───────────────────────────────────────────── */
