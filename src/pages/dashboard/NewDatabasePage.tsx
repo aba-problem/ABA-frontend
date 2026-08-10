@@ -32,24 +32,23 @@ import {
 /** Supported database engine types. */
 type Motor = 'MySQL' | 'SQLServer'
 
-// Ambos motores en mantenimiento temporal (bug de whitelist de IP en MySQL
-// bajo diagnóstico; SQL Server se pausa junto con MySQL por consistencia del
-// mensaje al usuario, no porque tenga el mismo bug). Para reactivar un motor,
-// cambia su `disabled` a `false` — el resto del flujo de creación ya funciona.
+// 2026-08-09: reactivados los dos motores — el bug de whitelist de IP en MySQL que
+// motivó la pausa ya se diagnosticó y arregló (ver Aba/DIAGNOSTICO-PROXYSQL.md).
+// Para volver a pausar un motor puntual, cambia su `disabled` a `true`.
 const ENGINES: { value: Motor; label: string; desc: string; color: string; disabled: boolean }[] = [
   {
     value: 'MySQL',
     label: 'MySQL 8.0',
     desc: 'World\'s most popular open-source database. Great for web apps.',
     color: '#3B82F6',
-    disabled: true,
+    disabled: false,
   },
   {
     value: 'SQLServer',
     label: 'SQL Server',
     desc: 'Microsoft\'s enterprise-grade relational database engine.',
     color: '#A855F7',
-    disabled: true,
+    disabled: false,
   },
 ]
 
@@ -139,13 +138,15 @@ export default function NewDatabasePage() {
         ))}
       </div>
 
-      {/* Maintenance notice — both engines disabled */}
-      <div className="rounded-[10px] border border-[#422006] bg-[#2A2008] p-4 flex items-center gap-3">
-        <Terminal size={14} className="text-[#EAB308] shrink-0" />
-        <p className="text-[12px] text-[#FCD34D]">
-          La creación de bases de datos está temporalmente en mantenimiento para ambos motores. Vuelve a intentarlo más tarde.
-        </p>
-      </div>
+      {/* Maintenance notice — solo si TODOS los motores están pausados (ver ENGINES arriba) */}
+      {ENGINES.every(engine => engine.disabled) && (
+        <div className="rounded-[10px] border border-[#422006] bg-[#2A2008] p-4 flex items-center gap-3">
+          <Terminal size={14} className="text-[#EAB308] shrink-0" />
+          <p className="text-[12px] text-[#FCD34D]">
+            La creación de bases de datos está temporalmente en mantenimiento para ambos motores. Vuelve a intentarlo más tarde.
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-[10px] border border-[#7F1D1D] bg-[#2A1010] p-4">
