@@ -4,6 +4,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
+# node:20-alpine trae npm 10.8.2, que tiene un bug conocido validando
+# bundleDependencies en paquetes wasm32-wasi de napi-rs (@tailwindcss/oxide-wasm32-wasi
+# empaqueta @emnapi/* como bundleDependencies) — npm ci las marca como "missing from
+# lock file" aunque el lockfile esté sano. Corregido en npm >=10.9. Se actualiza acá
+# en vez de fijar una versión de imagen distinta para no tocar el resto del stage.
+RUN npm install -g npm@11
 RUN npm ci
 
 COPY . .
