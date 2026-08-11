@@ -32,11 +32,13 @@ import {
 /**
  * Sidebar navigation items.
  *
- * `badge` marks modules that aren't fully available yet:
- * - 'Mantenimiento' (warning) — Bases de datos y N8N, pausados temporalmente.
- * - 'Pronto' (info) — IA como Servicio / Subdominios DNS: el backend ya
- *   implementa el módulo completo, pero falta conectar la pieza externa real
- *   (proveedor de IA / token de Cloudflare en producción).
+ * 2026-08-09: Bases de datos ya no lleva badge de mantenimiento — el bug de
+ * whitelist de IP en MySQL que motivó la pausa se diagnosticó y arregló (ver
+ * NewDatabasePage.tsx y Aba/DIAGNOSTICO-PROXYSQL.md), los dos motores vuelven
+ * a estar habilitados para crear. N8N, IA como Servicio y Subdominios DNS
+ * tampoco llevan badge — el backend está completo; lo que puede fallar al
+ * usarlos todavía son las piezas externas (instancia N8N real, proveedor de
+ * IA, token de Cloudflare), no la navegación ni el resto del flujo.
  */
 const NAV_ITEMS: {
   to: string
@@ -46,10 +48,10 @@ const NAV_ITEMS: {
   badge?: { text: string; variant: BadgeVariant }
 }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', end: true },
-  { to: '/dashboard/databases', icon: Database, label: 'Bases de datos', badge: { text: 'Mantenimiento', variant: 'warning' } },
-  { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N', badge: { text: 'Mantenimiento', variant: 'warning' } },
-  { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio', badge: { text: 'Pronto', variant: 'info' } },
-  { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS', badge: { text: 'Pronto', variant: 'info' } },
+  { to: '/dashboard/databases', icon: Database, label: 'Bases de datos' },
+  { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
+  { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio' },
+  { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS' },
   { to: '/dashboard/sesiones', icon: History, label: 'Registros de sesión' },
 ]
 

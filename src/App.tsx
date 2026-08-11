@@ -20,9 +20,9 @@
  * - `ProtectedRoute`: Redirects unauthenticated users to `/login`
  * - `GuestRoute`: Redirects authenticated users to `/dashboard`
  *
- * No hay un apagón total tipo "modo mantenimiento" a nivel de app — el
- * control de qué módulo está disponible se hace por-ruta (`FeatureNotice` en
- * Bases de datos/N8N/IA/DNS más abajo).
+ * No hay un apagón total tipo "modo mantenimiento" a nivel de app. Bases de
+ * datos sigue con la creación deshabilitada dentro de NewDatabasePage (los
+ * motores se muestran en gris); N8N/IA/DNS ya apuntan a sus páginas reales.
  *
  * @see contexts/AuthContext.tsx — The auth state provider
  */
@@ -41,7 +41,9 @@ import DatabaseDetailPage from './pages/dashboard/DatabaseDetailPage'
 import NewDatabasePage from './pages/dashboard/NewDatabasePage'
 import SessionsPage from './pages/dashboard/SessionsPage'
 import CelulasSociasPage from './pages/dashboard/CelulasSociasPage'
-import FeatureNotice from './pages/dashboard/FeatureNotice'
+import N8nPage from './pages/dashboard/N8nPage'
+import ApiKeysPage from './pages/dashboard/ApiKeysPage'
+import DnsPage from './pages/dashboard/DnsPage'
 import type { ReactNode } from 'react'
 
 // ─── Route Guards ──────────────────────────────────────────────────────────
@@ -131,14 +133,16 @@ export default function App() {
             <Route path="databases/:id" element={<DatabaseDetailPage />} />
             <Route path="new" element={<NewDatabasePage />} />
 
-            {/* N8N — en mantenimiento (mismo criterio que Bases de datos). */}
-            <Route path="n8n" element={<FeatureNotice feature="Automatización N8N" mode="maintenance" />} />
-
-            {/* IA como Servicio y DNS Autoservicio — backend funcional pero sin las
-                piezas externas reales conectadas todavía (proveedor de IA / token de
-                Cloudflare en el .env de producción). */}
-            <Route path="apikeys" element={<FeatureNotice feature="IA como Servicio" mode="soon" detail="La gestión de API keys ya funciona; la llamada real a un proveedor de IA está pendiente." />} />
-            <Route path="dns" element={<FeatureNotice feature="Subdominios DNS" mode="soon" detail="Pendiente de cargar el token de Cloudflare en el servidor de producción." />} />
+            {/* N8N, IA como Servicio y DNS Autoservicio — habilitados de vuelta a sus
+                páginas reales. Backend funcional (auth/rate-limit/auditoría/SPs), pero
+                las piezas externas reales (instancia N8N, proveedor de IA detrás de
+                /ai/completar, token de Cloudflare) siguen pendientes de credenciales —
+                ver conversación: N8N crea una fila real pero sin servidor N8N detrás
+                todavía; DNS devolverá 503 hasta cargar CLOUDFLARE_API_TOKEN en el
+                .env de producción. */}
+            <Route path="n8n" element={<N8nPage />} />
+            <Route path="apikeys" element={<ApiKeysPage />} />
+            <Route path="dns" element={<DnsPage />} />
 
             <Route path="sesiones" element={<SessionsPage />} />
             {/* Admin-only — CelulasSociasPage se autogatea con usuario.esAdmin,
