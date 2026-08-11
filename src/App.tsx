@@ -40,6 +40,7 @@ import DatabasesPage from './pages/dashboard/DatabasesPage'
 import DatabaseDetailPage from './pages/dashboard/DatabaseDetailPage'
 import NewDatabasePage from './pages/dashboard/NewDatabasePage'
 import SessionsPage from './pages/dashboard/SessionsPage'
+import CelulasSociasPage from './pages/dashboard/CelulasSociasPage'
 import FeatureNotice from './pages/dashboard/FeatureNotice'
 import type { ReactNode } from 'react'
 
@@ -140,6 +141,9 @@ export default function App() {
             <Route path="dns" element={<FeatureNotice feature="Subdominios DNS" mode="soon" detail="Pendiente de cargar el token de Cloudflare en el servidor de producción." />} />
 
             <Route path="sesiones" element={<SessionsPage />} />
+            {/* Admin-only — CelulasSociasPage se autogatea con usuario.esAdmin,
+                el backend aparte revalida el rol Admin en cada SP (sql/018). */}
+            <Route path="celulas-socias" element={<CelulasSociasPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 

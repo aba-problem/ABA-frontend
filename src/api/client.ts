@@ -173,6 +173,20 @@ export async function apiDelete<T>(path: string): Promise<ApiResult<T>> {
   return apiRequest<T>('DELETE', path)
 }
 
+/**
+ * Performs a PATCH request to the ABA backend.
+ *
+ * Automatically includes the CSRF token header for CSRF protection.
+ *
+ * @typeParam T - Expected response type
+ * @param path - API path (e.g. '/admin/celulas-socias/1/estado')
+ * @param body - Request body (will be JSON-serialized)
+ * @returns Typed result with data or error
+ */
+export async function apiPatch<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
+  return apiRequest<T>('PATCH', path, body)
+}
+
 // ─── Core Request Engine ───────────────────────────────────────────────────
 
 /**

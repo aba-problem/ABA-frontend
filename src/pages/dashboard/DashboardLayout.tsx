@@ -26,7 +26,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Badge, type BadgeVariant } from '../../ds/Badge'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, History,
+  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, History, Building2,
 } from 'lucide-react'
 
 /**
@@ -64,6 +64,12 @@ export default function DashboardLayout() {
     navigate('/login', { replace: true })
   }
 
+  // Solo visible en el sidebar para administradores — el backend igual revalida
+  // el rol Admin en cada SP (sql/018), esto es puramente cosmético.
+  const navItems = user?.esAdmin
+    ? [...NAV_ITEMS, { to: '/dashboard/celulas-socias', icon: Building2, label: 'Células socias' }]
+    : NAV_ITEMS
+
   return (
     <div className="min-h-screen bg-[var(--aba-bg)] flex">
       {mobileOpen && (
@@ -97,7 +103,7 @@ export default function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-3 px-2 space-y-0.5">
-          {NAV_ITEMS.map(item => (
+          {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}

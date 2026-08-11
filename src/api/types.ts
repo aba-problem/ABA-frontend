@@ -351,6 +351,30 @@ export interface DnsRegistroReserva {
   valor: string
 }
 
+// ─── Células Socias (Admin) ───────────────────────────────────────────────
+
+/**
+ * A partner cell as returned by `GET /admin/celulas-socias`. Never includes
+ * the API key — only `CelulaSociaCreada` (create/rotate responses) does,
+ * and only once.
+ */
+export interface CelulaSocia {
+  id: number
+  nombreCelula: string
+  prefijo: string
+  activo: boolean
+  fechaCreacion: string
+}
+
+/**
+ * Result of creating a cell (`POST /admin/celulas-socias`) or rotating its
+ * key (`POST /admin/celulas-socias/{id}/rotar-key`). `apiKey` is plaintext
+ * and shown ONLY in this response — it can never be retrieved again.
+ */
+export interface CelulaSociaCreada extends CelulaSocia {
+  apiKey: string
+}
+
 // ─── Session Records ──────────────────────────────────────────────────────
 
 /**
