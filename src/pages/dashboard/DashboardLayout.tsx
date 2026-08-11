@@ -27,7 +27,7 @@ import { Badge, type BadgeVariant } from '../../ds/Badge'
 import { SettingsModal } from '../../components/SettingsModal'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, History, Building2,
+  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, Building2,
 } from 'lucide-react'
 
 /**
@@ -53,8 +53,9 @@ const NAV_ITEMS: {
   { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
   { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio' },
   { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS' },
-  { to: '/dashboard/sesiones', icon: History, label: 'Registros de sesión' },
 ]
+// "Registros de sesión" ya no vive en el sidebar — se movió a Settings
+// (pestaña propia dentro de SettingsModal), a pedido explícito del usuario.
 
 export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false)

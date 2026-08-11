@@ -26,9 +26,17 @@ import type { DnsRegistro } from '../../api/types'
 import { Button } from '../../ds/Button'
 import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
+import { Tooltip } from '../../ds/Tooltip'
 import {
   Globe, ArrowLeft, Trash2, AlertTriangle, Plus, Shield,
 } from 'lucide-react'
+
+/** Traduce el estado técnico a algo que no requiere saber qué es un "provisioning". */
+const ESTADO_LABEL: Record<string, string> = {
+  ACTIVO: 'Activo',
+  PENDIENTE: 'Creando…',
+  ELIMINADA: 'Eliminado',
+}
 
 const SUBDOMINIO_REGEX = /^[a-z0-9-]{1,40}$/
 
@@ -138,7 +146,7 @@ export default function DnsPage() {
           <p className="text-[14px] font-mono font-semibold text-[#F5F5F5]">{r.subdominio}</p>
           <Badge variant={r.tipoRegistro === 'A' ? 'info' : 'primary'} size="xs">{r.tipoRegistro}</Badge>
           <Badge variant={r.estado === 'ACTIVO' ? 'success' : r.estado === 'PENDIENTE' ? 'warning' : 'danger'} size="xs" dot>
-            {r.estado}
+            {ESTADO_LABEL[r.estado] ?? r.estado}
           </Badge>
           {admin && r.usuarioCorreo && (
             <span className="text-[11px] text-[#71717A]">{r.usuarioCorreo}</span>
@@ -209,7 +217,10 @@ export default function DnsPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_110px_1fr_auto] gap-3">
           <div>
-            <label className="block text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">Subdominio</label>
+            <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
+              Subdominio
+              <Tooltip text="El nombre que quieres usar antes de .aba.andrescortes.dev — por ejemplo 'app' crea app.aba.andrescortes.dev." />
+            </label>
             <div className="flex items-center">
               <input
                 type="text"
@@ -224,18 +235,24 @@ export default function DnsPage() {
             </div>
           </div>
           <div>
-            <label className="block text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">Tipo</label>
+            <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
+              Tipo
+              <Tooltip text="'A' apunta directo a una dirección IP. 'CNAME' apunta a otro nombre de dominio en vez de una IP. Si no estás seguro, usa 'A'." />
+            </label>
             <select
               value={tipoRegistro}
               onChange={e => setTipoRegistro(e.target.value as TipoRegistro)}
               className={`${inputClass} w-full cursor-pointer`}
             >
-              <option value="A">A</option>
-              <option value="CNAME">CNAME</option>
+              <option value="A">A — apunta a una IP</option>
+              <option value="CNAME">CNAME — apunta a otro dominio</option>
             </select>
           </div>
           <div>
-            <label className="block text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">Valor</label>
+            <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
+              Valor
+              <Tooltip text={tipoRegistro === 'A' ? 'La dirección IP del servidor al que quieres apuntar.' : 'El dominio al que quieres apuntar (sin http:// ni www).'} />
+            </label>
             <input
               type="text"
               value={valor}
@@ -271,7 +288,8 @@ export default function DnsPage() {
           {records.length === 0 ? (
             <div className="p-10 text-center">
               <Globe size={20} className="text-[#52525B] mx-auto mb-2" />
-              <p className="text-[13px] text-[#71717A]">No tienes registros DNS todavía.</p>
+              <p className="text-[13px] text-[#71717A]">Todavía no tienes ningún subdominio.</p>
+              <p className="text-[12px] text-[#52525B] mt-1">Usa el formulario de arriba para crear el primero.</p>
             </div>
           ) : (
             records.map(r => renderRecord(r, false))

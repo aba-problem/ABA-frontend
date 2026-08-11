@@ -120,8 +120,8 @@ export default function N8nPage() {
           <Workflow size={18} className="text-[#3B82F6]" />
         </div>
         <div>
-          <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Workspace N8N</h1>
-          <p className="text-[13px] text-[#71717A]">Automatiza flujos de trabajo con tu propio workspace N8N.</p>
+          <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Automatización (N8N)</h1>
+          <p className="text-[13px] text-[#71717A]">Crea tareas automáticas que se ejecutan solas — por ejemplo, avisarte por correo cuando pase algo en una de tus bases.</p>
         </div>
       </div>
 

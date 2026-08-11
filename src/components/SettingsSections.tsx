@@ -13,12 +13,11 @@
  */
 
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme, THEME_OPTIONS } from '../contexts/ThemeContext'
 import { getProfile } from '../api/dashboard'
 import { SkeletonCard } from '../ds/Skeleton'
-import { User, Mail, Shield, Calendar, Clock, Check, Palette, History } from 'lucide-react'
+import { User, Mail, Shield, Calendar, Clock, Check, Palette } from 'lucide-react'
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -94,8 +93,8 @@ export function AppearanceSection() {
   )
 }
 
-/** Profile section — fetches the user's identity + a link to session history. */
-export function ProfileSection({ onNavigate }: { onNavigate?: () => void }) {
+/** Profile section — fetches and displays the user's identity. */
+export function ProfileSection() {
   const { user, setUser } = useAuth()
   const [loading, setLoading] = useState(!user)
   const [error, setError] = useState<string | null>(null)
@@ -151,20 +150,6 @@ export function ProfileSection({ onNavigate }: { onNavigate?: () => void }) {
         <ProfileRow icon={Calendar} label="Account created" value={formatDate(user.fechaCreacion)} color="#EAB308" />
         <ProfileRow icon={Clock} label="Last login" value={formatDate(user.ultimoLogin)} color="#F97316" />
       </div>
-
-      <NavLink
-        to="/dashboard/sesiones"
-        onClick={onNavigate}
-        className="flex items-center gap-4 rounded-[14px] border border-[var(--aba-border)] bg-[var(--aba-card)] p-5 hover:border-[var(--aba-text-muted)] transition-all"
-      >
-        <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0" style={{ backgroundColor: '#3B82F618', border: '1px solid #3B82F630' }}>
-          <History size={15} style={{ color: '#3B82F6' }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-medium text-[var(--aba-text)]">Registros de sesión</p>
-          <p className="text-[12px] text-[var(--aba-text-muted)]">Últimos accesos e IPs autorizadas de tu cuenta</p>
-        </div>
-      </NavLink>
     </div>
   )
 }

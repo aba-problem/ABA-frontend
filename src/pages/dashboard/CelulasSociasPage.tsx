@@ -30,6 +30,7 @@ import { Badge } from '../../ds/Badge'
 import { Modal } from '../../ds/Modal'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { Pagination } from '../../ds/Pagination'
+import { Tooltip } from '../../ds/Tooltip'
 import {
   ArrowLeft, Building2, Plus, Check, Copy, ShieldOff, ShieldCheck, KeyRound,
 } from 'lucide-react'
@@ -194,7 +195,10 @@ export default function CelulasSociasPage() {
             />
           </div>
           <div>
-            <label className="block text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">Prefijo</label>
+            <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
+              Prefijo
+              <Tooltip text="Un código corto que identifica a esta célula. Se usa para que sus bases de datos nunca choquen de nombre con las de otra célula. No se puede cambiar después de crear la célula." />
+            </label>
             <input
               type="text"
               value={prefijo}

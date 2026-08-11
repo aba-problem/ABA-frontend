@@ -137,8 +137,10 @@ export default function ApiKeysPage() {
             <KeyRound size={18} className="text-[#3B82F6]" />
           </div>
           <div>
-            <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">API Keys</h1>
-            <p className="text-[13px] text-[#71717A]">{keys.length} keys · Límite: 5 creaciones por hora</p>
+            <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">IA como Servicio</h1>
+            <p className="text-[13px] text-[#71717A]">
+              Claves de acceso para que tus programas usen IA en tu nombre. Tienes {keys.length}{keys.length === 1 ? ' clave' : ' claves'} · hasta 5 nuevas por hora.
+            </p>
           </div>
         </div>
         <Button variant="primary" size="md" loading={creating} onClick={handleCreate} iconLeft={<KeyRound size={14} />}>
