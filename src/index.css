@@ -385,6 +385,13 @@ body {
 }
 .aba-slide-in { animation: aba-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* ─── Right-anchored panel slide (SettingsModal) ─────────────────── */
+@keyframes aba-slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.aba-slide-in-right { animation: aba-slide-in-right 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 /* ─── Toast slide in ─────────────────────────────────────────────── */
 @keyframes aba-toast-in {
   from { opacity: 0; transform: translateX(100%); }

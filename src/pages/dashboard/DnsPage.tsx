@@ -219,7 +219,7 @@ export default function DnsPage() {
                 className={`${inputClass} w-full rounded-r-none font-mono`}
               />
               <span className="h-9 px-2.5 inline-flex items-center rounded-r-[10px] border border-l-0 border-[#2B2D31] bg-[#09090B] text-[11px] text-[#52525B] font-mono">
-                .andrescortes.dev
+                .aba.andrescortes.dev
               </span>
             </div>
           </div>

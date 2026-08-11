@@ -24,6 +24,7 @@ import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Badge, type BadgeVariant } from '../../ds/Badge'
+import { SettingsModal } from '../../components/SettingsModal'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
   Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, History, Building2,
@@ -58,6 +59,7 @@ const NAV_ITEMS: {
 export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const { logout, user } = useAuth()
   const navigate = useNavigate()
 
@@ -152,20 +154,23 @@ export default function DashboardLayout() {
 
         {/* Bottom section */}
         <div className="border-t border-[var(--aba-border)] p-2 space-y-0.5">
-          <NavLink
-            to="/dashboard/settings"
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
-                isActive
-                  ? 'bg-[var(--aba-card)] text-[var(--aba-text)]'
-                  : 'text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)]'
-              } ${collapsed ? 'justify-center' : ''}`
-            }
+          {/* Settings abre como overlay (SettingsModal) en vez de navegar — el
+              usuario no pierde la vista en la que estaba. /dashboard/settings
+              sigue existiendo como página completa para acceso directo/enlace. */}
+          <button
+            onClick={() => {
+              setMobileOpen(false)
+              setSettingsOpen(true)
+            }}
+            className={`flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all cursor-pointer w-full ${
+              settingsOpen
+                ? 'bg-[var(--aba-card)] text-[var(--aba-text)]'
+                : 'text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card)]'
+            } ${collapsed ? 'justify-center' : ''}`}
           >
             <Settings size={16} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
-          </NavLink>
+          </button>
 
           <button
             onClick={handleLogout}
@@ -211,7 +216,7 @@ export default function DashboardLayout() {
             </a>
             {user && (
               <button
-                onClick={() => navigate('/dashboard/settings')}
+                onClick={() => setSettingsOpen(true)}
                 className="flex items-center gap-2.5 cursor-pointer group"
               >
                 {user.avatarUrl ? (
@@ -234,6 +239,8 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

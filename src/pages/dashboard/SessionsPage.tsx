@@ -16,7 +16,10 @@ import { listarSesiones } from '../../api/sesiones'
 import type { SesionRegistro } from '../../api/types'
 import { Badge, type BadgeVariant } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
+import { Pagination } from '../../ds/Pagination'
 import { History, ArrowLeft, LogIn, UserPlus, ShieldCheck, ShieldAlert } from 'lucide-react'
+
+const PAGE_SIZE = 10
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('es-CO', {
@@ -36,6 +39,7 @@ export default function SessionsPage() {
   const [sesiones, setSesiones] = useState<SesionRegistro[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     let cancelled = false
@@ -90,28 +94,36 @@ export default function SessionsPage() {
               <p className="text-[13px] text-[#71717A]">Todavía no hay eventos registrados.</p>
             </div>
           ) : (
-            sesiones.map(s => {
-              const info = ACCION_INFO[s.accion] ?? { label: s.accion, variant: 'default' as BadgeVariant, icon: History }
-              const Icon = info.icon
-              return (
-                <div key={s.id} className="flex items-center justify-between gap-4 p-4 border-b border-[#2B2D31] last:border-0">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-[8px] bg-[#1F2024] flex items-center justify-center shrink-0">
-                      <Icon size={14} className="text-[#71717A]" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={info.variant} size="xs">{info.label}</Badge>
-                        {s.ipOrigen && (
-                          <span className="text-[12px] font-mono text-[#71717A]">{s.ipOrigen}</span>
-                        )}
+            <>
+              {sesiones.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(s => {
+                const info = ACCION_INFO[s.accion] ?? { label: s.accion, variant: 'default' as BadgeVariant, icon: History }
+                const Icon = info.icon
+                return (
+                  <div key={s.id} className="flex items-center justify-between gap-4 p-4 border-b border-[#2B2D31] last:border-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-[8px] bg-[#1F2024] flex items-center justify-center shrink-0">
+                        <Icon size={14} className="text-[#71717A]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant={info.variant} size="xs">{info.label}</Badge>
+                          {s.ipOrigen && (
+                            <span className="text-[12px] font-mono text-[#71717A]">{s.ipOrigen}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <span className="text-[11px] text-[#52525B] shrink-0">{formatDate(s.fechaEvento)}</span>
                   </div>
-                  <span className="text-[11px] text-[#52525B] shrink-0">{formatDate(s.fechaEvento)}</span>
-                </div>
-              )
-            })
+                )
+              })}
+              <Pagination
+                page={page}
+                totalPages={Math.max(1, Math.ceil(sesiones.length / PAGE_SIZE))}
+                onChange={setPage}
+                label={`${sesiones.length} evento${sesiones.length === 1 ? '' : 's'}`}
+              />
+            </>
           )}
         </div>
       )}

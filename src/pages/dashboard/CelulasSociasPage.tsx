@@ -29,11 +29,13 @@ import { Button } from '../../ds/Button'
 import { Badge } from '../../ds/Badge'
 import { Modal } from '../../ds/Modal'
 import { SkeletonCard } from '../../ds/Skeleton'
+import { Pagination } from '../../ds/Pagination'
 import {
   ArrowLeft, Building2, Plus, Check, Copy, ShieldOff, ShieldCheck, KeyRound,
 } from 'lucide-react'
 
 const PREFIJO_REGEX = /^[a-z0-9_]{2,20}$/
+const PAGE_SIZE = 5
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -46,6 +48,7 @@ export default function CelulasSociasPage() {
   const [celulas, setCelulas] = useState<CelulaSocia[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   const [nombreCelula, setNombreCelula] = useState('')
   const [prefijo, setPrefijo] = useState('')
@@ -227,7 +230,7 @@ export default function CelulasSociasPage() {
               <p className="text-[13px] text-[#71717A]">Todavía no hay células socias dadas de alta.</p>
             </div>
           ) : (
-            celulas.map(c => (
+            celulas.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(c => (
               <div key={c.id} className="flex items-center justify-between gap-4 p-4 border-b border-[#2B2D31] last:border-0">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5 flex-wrap">
@@ -281,6 +284,12 @@ export default function CelulasSociasPage() {
               </div>
             ))
           )}
+          <Pagination
+            page={page}
+            totalPages={Math.max(1, Math.ceil(celulas.length / PAGE_SIZE))}
+            onChange={setPage}
+            label={`${celulas.length} célula${celulas.length === 1 ? '' : 's'}`}
+          />
         </div>
       )}
 
