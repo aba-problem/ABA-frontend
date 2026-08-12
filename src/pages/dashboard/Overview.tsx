@@ -103,7 +103,7 @@ export default function DashboardOverview() {
       ) : error ? (
         <div className="rounded-[14px] border border-[#7F1D1D] bg-[#2A1010] p-5">
           <p className="text-[14px] text-[#F87171]">{error}</p>
-          <p className="text-[12px] text-[#71717A] mt-1">Check console for traceId details.</p>
+          <p className="text-[12px] text-[#71717A] mt-1">Intenta recargar la página en unos segundos.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

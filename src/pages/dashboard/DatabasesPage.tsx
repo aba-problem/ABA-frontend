@@ -57,14 +57,14 @@ export default function DatabasesPage() {
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Databases</h1>
-          <p className="text-[13px] text-[#71717A] mt-1">{databases.length} total</p>
+          <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Bases de datos</h1>
+          <p className="text-[13px] text-[#71717A] mt-1">{databases.length} en total</p>
         </div>
         <button
           onClick={() => navigate('/dashboard/new')}
           className="inline-flex items-center gap-2 h-9 px-4 rounded-[10px] bg-[#3B82F6] text-[13px] font-medium text-white hover:bg-[#2563EB] transition-all cursor-pointer"
         >
-          + New database
+          + Nueva base de datos
         </button>
       </div>
 
@@ -73,7 +73,7 @@ export default function DatabasesPage() {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#52525B]" />
         <input
           type="text"
-          placeholder="Search databases..."
+          placeholder="Buscar por nombre, motor o servidor…"
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full h-9 pl-9 pr-3 rounded-[10px] border border-[#2B2D31] bg-[#111217] text-[13px] text-[#F5F5F5] placeholder-[#52525B] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 outline-none transition-all"
@@ -92,8 +92,16 @@ export default function DatabasesPage() {
         <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] p-12 text-center">
           <Database size={24} className="text-[#52525B] mx-auto mb-3" />
           <p className="text-[14px] text-[#71717A]">
-            {search ? 'No databases match your search.' : 'No databases created yet.'}
+            {search ? 'Ninguna base coincide con tu búsqueda.' : 'Todavía no has creado ninguna base de datos.'}
           </p>
+          {!search && (
+            <button
+              onClick={() => navigate('/dashboard/new')}
+              className="mt-4 inline-flex items-center gap-2 h-9 px-4 rounded-[10px] bg-[#3B82F6] text-[13px] font-medium text-white hover:bg-[#2563EB] transition-all cursor-pointer"
+            >
+              Crear la primera
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -122,15 +130,15 @@ export default function DatabasesPage() {
 
               <div className="space-y-2 text-[12px]">
                 <div className="flex justify-between">
-                  <span className="text-[#52525B]">Host</span>
+                  <span className="text-[#52525B]">Servidor</span>
                   <span className="font-mono text-[#A1A1AA] truncate ml-2 max-w-[140px]">{db.host}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#52525B]">Port</span>
+                  <span className="text-[#52525B]">Puerto</span>
                   <span className="font-mono text-[#A1A1AA]">{db.puerto}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#52525B]">Storage</span>
+                  <span className="text-[#52525B]">Espacio</span>
                   <span className="text-[#A1A1AA]">{db.espacioUtilizadoMB}/{db.espacioMaximoMB} MB</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-[#1F2024] overflow-hidden mt-1">

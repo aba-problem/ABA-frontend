@@ -34,6 +34,16 @@ import {
   Activity, Clock, Server, User, Shield, Trash2,
 } from 'lucide-react'
 
+/** Traduce el estado técnico a algo legible sin saber qué significa cada valor crudo. */
+const ESTADO_LABEL: Record<string, string> = {
+  ACTIVA: 'Activa',
+  PAUSADA: 'Pausada por inactividad',
+  PENDIENTE: 'Creando…',
+  ELIMINADA: 'Eliminada',
+  ERROR_APROVISIONAMIENTO: 'No se pudo crear',
+  CUOTA_EXCEDIDA: 'Espacio lleno',
+}
+
 /**
  * Reusable key-value row with optional monospace font and copy button.
  * Shows a brief checkmark animation on successful copy.
@@ -201,7 +211,7 @@ export default function DatabaseDetailPage() {
                 variant={db.estado === 'ACTIVA' ? 'success' : db.estado === 'PAUSADA' ? 'warning' : 'danger'}
                 pulse={db.estado === 'ACTIVA'}
               />
-              <span className="text-[12px] text-[#71717A]">{db.estado}</span>
+              <span className="text-[12px] text-[#71717A]">{ESTADO_LABEL[db.estado] ?? db.estado}</span>
             </div>
           </div>
           <p className="text-[13px] text-[#71717A] font-mono">{db.host}:{db.puerto}</p>
@@ -218,10 +228,10 @@ export default function DatabaseDetailPage() {
               <Server size={14} className="text-[#3B82F6]" />
               <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Conexión</h3>
             </div>
-            <InfoRow label="Host" value={db.host} mono copyable />
-            <InfoRow label="Port" value={String(db.puerto)} mono copyable />
-            <InfoRow label="Engine" value={db.motor} />
-            <InfoRow label="User" value={db.usuarioBD} mono copyable />
+            <InfoRow label="Servidor" value={db.host} mono copyable />
+            <InfoRow label="Puerto" value={String(db.puerto)} mono copyable />
+            <InfoRow label="Motor" value={db.motor} />
+            <InfoRow label="Usuario" value={db.usuarioBD} mono copyable />
           </div>
 
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
@@ -261,8 +271,8 @@ export default function DatabaseDetailPage() {
             </div>
               <InfoRow label="Creada" value={new Date(db.fechaCreacion).toLocaleDateString()} />
             <InfoRow
-              label="Last active"
-                value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleDateString() : 'Nunca'}
+              label="Último uso"
+                value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleDateString() : 'Todavía no se usó'}
             />
           </div>
         </div>
@@ -314,13 +324,13 @@ export default function DatabaseDetailPage() {
 
                 <div className="rounded-[10px] border border-[#2B2D31] bg-[#09090B] p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] text-[#52525B] uppercase tracking-wider font-mono">Password</span>
+                    <span className="text-[11px] text-[#52525B] uppercase tracking-wider font-mono">Contraseña</span>
                     <button
                       onClick={() => setShowPassword(s => !s)}
                       className="flex items-center gap-1 text-[11px] text-[#71717A] hover:text-[#A1A1AA] transition-colors cursor-pointer"
                     >
                       {showPassword ? <EyeOff size={11} /> : <Eye size={11} />}
-                      {showPassword ? 'Hide' : 'Show'}
+                      {showPassword ? 'Ocultar' : 'Mostrar'}
                     </button>
                   </div>
                   <p className="font-mono text-[13px] text-[#A1A1AA]">
@@ -352,16 +362,16 @@ export default function DatabaseDetailPage() {
               <Database size={14} className="text-[#3B82F6]" />
               <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Detalles de la base</h3>
             </div>
-            <InfoRow label="Name" value={db.nombreBD} mono copyable />
-            <InfoRow label="User" value={db.usuarioBD} mono copyable />
-            <InfoRow label="Engine" value={db.motor} />
-            <InfoRow label="Status" value={db.estado} />
-            <InfoRow label="Max Storage" value={`${db.espacioMaximoMB} MB`} />
-            <InfoRow label="Used Storage" value={`${db.espacioUtilizadoMB} MB`} />
-            <InfoRow label="Created" value={new Date(db.fechaCreacion).toLocaleString()} />
+            <InfoRow label="Nombre" value={db.nombreBD} mono copyable />
+            <InfoRow label="Usuario" value={db.usuarioBD} mono copyable />
+            <InfoRow label="Motor" value={db.motor} />
+            <InfoRow label="Estado" value={ESTADO_LABEL[db.estado] ?? db.estado} />
+            <InfoRow label="Espacio máximo" value={`${db.espacioMaximoMB} MB`} />
+            <InfoRow label="Espacio usado" value={`${db.espacioUtilizadoMB} MB`} />
+            <InfoRow label="Creada" value={new Date(db.fechaCreacion).toLocaleString()} />
             <InfoRow
-              label="Last Activity"
-              value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleString() : 'N/A'}
+              label="Última actividad"
+              value={db.ultimaActividad ? new Date(db.ultimaActividad).toLocaleString() : 'Todavía no se usó'}
             />
           </div>
 
@@ -369,11 +379,10 @@ export default function DatabaseDetailPage() {
           <div className="rounded-[14px] border border-[#7F1D1D]/40 bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-3">
               <Trash2 size={14} className="text-[#EF4444]" />
-              <h3 className="text-[14px] font-semibold text-[#F87171]">Danger Zone</h3>
+              <h3 className="text-[14px] font-semibold text-[#F87171]">Eliminar esta base de datos</h3>
             </div>
             <p className="text-[13px] text-[#71717A] mb-4">
-              Deactivating this database will set its status to &quot;ELIMINADA&quot;.
-              The database will no longer be accessible.
+              Vas a perder el acceso a esta base y a todo lo que tenga guardado. No se puede deshacer.
             </p>
             {!showDeleteConfirm ? (
               <Button
@@ -381,12 +390,12 @@ export default function DatabaseDetailPage() {
                 size="sm"
                 onClick={() => setShowDeleteConfirm(true)}
               >
-                Deactivate Database
+                Eliminar base de datos
               </Button>
             ) : (
               <div className="rounded-[10px] border border-[#7F1D1D] bg-[#2A1010] p-4">
                 <p className="text-[13px] text-[#F87171] mb-3">
-                  Are you sure? This action cannot be undone.
+                  ¿Seguro que quieres eliminarla? Esta acción no se puede deshacer.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -395,7 +404,7 @@ export default function DatabaseDetailPage() {
                     loading={deleting}
                     onClick={handleDelete}
                   >
-                    Yes, deactivate
+                    Sí, eliminar
                   </Button>
                   <Button
                     variant="secondary"
@@ -403,7 +412,7 @@ export default function DatabaseDetailPage() {
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={deleting}
                   >
-                    Cancel
+                    Cancelar
                   </Button>
                 </div>
               </div>

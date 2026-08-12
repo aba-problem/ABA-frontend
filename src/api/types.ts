@@ -395,6 +395,21 @@ export interface SesionRegistro {
   ipOrigen: string | null
   /** Event timestamp (ISO format). */
   fechaEvento: string
-  /** Raw JSON detail from the backend, or null. */
+  /**
+   * Raw JSON detail from the backend, or null. Known shapes (all optional —
+   * older events predate this and won't have them):
+   * - LOGIN/REGISTRO: `{ proveedor, userAgent? }`
+   * - IP_VALIDADA: `{ ciudad? }`
+   * - IP_RECHAZADA: `{ paisIso, ciudad? }`
+   * - IP_REVOCADA: `{ ipRevocada }`
+   */
   detalle: string | null
+}
+
+/** Paginated response from `GET /sesiones`. */
+export interface SesionesPaginadas {
+  registros: SesionRegistro[]
+  total: number
+  pagina: number
+  tamanoPagina: number
 }
