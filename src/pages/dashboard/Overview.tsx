@@ -108,7 +108,10 @@ export default function DashboardOverview() {
   const visibleDbs = databases.filter(d => d.estado !== 'ELIMINADA')
   const activeDbs = visibleDbs.filter(d => d.estado === 'ACTIVA')
   const totalStorage = visibleDbs.reduce((sum, d) => sum + d.espacioUtilizadoMB, 0)
-  const maxStorage = visibleDbs.reduce((sum, d) => sum + d.espacioMaximoMB, 0) || 512
+  // "Cuota máxima" es la suma del máximo de cada base que ya tenés — no un cupo fijo
+  // que la plataforma otorgue de entrada. Sin bases, lo correcto es 0, no un número
+  // inventado (el "|| 512" anterior mostraba una cuota falsa a cualquier cuenta nueva).
+  const maxStorage = visibleDbs.reduce((sum, d) => sum + d.espacioMaximoMB, 0)
 
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-8">
