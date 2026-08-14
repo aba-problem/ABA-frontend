@@ -24,7 +24,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getDatabase, getCredential, deleteDatabase } from '../../api/dashboard'
+import { getDatabase, getCredential, rotateCredential, deleteDatabase } from '../../api/dashboard'
 import type { DashboardItem, Credencial } from '../../api/types'
 import { Skeleton, SkeletonText } from '../../ds/Skeleton'
 import { Badge, StatusDot } from '../../ds/Badge'
@@ -125,10 +125,27 @@ export default function DatabaseDetailPage() {
     // SQL Server (sqlserver:// no es un formato real que esas herramientas
     // parseen) y el que usa MySqlConnector/.NET para MySQL. TrustServerCertificate
     // es necesario en SQL Server porque el motor usa un certificado autofirmado.
-    return c.motor === 'MySQL'
-      ? `Server=${c.host};Port=${c.puerto};Database=${c.nombreBD};Uid=${c.usuarioBD};Pwd=${c.password};`
-      : `Server=${c.host},${c.puerto};Database=${c.nombreBD};User Id=${c.usuarioBD};Password=${c.password};TrustServerCertificate=True;Encrypt=True;`
+    if (c.motor === 'MySQL')
+      return `Server=${c.host};Port=${c.puerto};Database=${c.nombreBD};Uid=${c.usuarioBD};Pwd=${c.password};`
+    if (c.motor === 'MongoDB')
+      return `mongodb://${c.usuarioBD}:${c.password}@${c.host}:${c.puerto}/${c.nombreBD}`
+    return `Server=${c.host},${c.puerto};Database=${c.nombreBD};User Id=${c.usuarioBD};Password=${c.password};TrustServerCertificate=True;Encrypt=True;`
   }, [])
+
+  const [rotating, setRotating] = useState(false)
+  const handleRotateCredential = useCallback(async () => {
+    if (!id || rotating) return
+    if (!window.confirm('Esto invalida la contraseña actual y genera una nueva. ¿Continuar?')) return
+    setRotating(true)
+    const result = await rotateCredential(Number(id))
+    if (result.ok) {
+      setCred(c => c ? { ...c, usuarioBD: result.data.usuario, password: result.data.password } : c)
+      setShowPassword(true)
+    } else {
+      setError(result.error.error)
+    }
+    setRotating(false)
+  }, [id, rotating])
 
   const copyConnectionString = useCallback(() => {
     if (!cred) return
@@ -344,6 +361,12 @@ export default function DatabaseDetailPage() {
                        Límite: 5 consultas de credenciales por hora
                   </span>
                 </div>
+
+                {db.motor === 'MongoDB' && (
+                  <Button variant="secondary" size="sm" loading={rotating} onClick={handleRotateCredential}>
+                    Rotar contraseña
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="rounded-[10px] border border-dashed border-[#2B2D31] bg-[#09090B] p-8 text-center">

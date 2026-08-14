@@ -30,12 +30,12 @@ import {
 } from 'lucide-react'
 
 /** Supported database engine types. */
-type Motor = 'MySQL' | 'SQLServer'
+type Motor = 'MySQL' | 'SQLServer' | 'MongoDB'
 
 // 2026-08-09: reactivados los dos motores — el bug de whitelist de IP en MySQL que
 // motivó la pausa ya se diagnosticó y arregló (ver Aba/DIAGNOSTICO-PROXYSQL.md).
 // Para volver a pausar un motor puntual, cambia su `disabled` a `true`.
-const ENGINES: { value: Motor; label: string; desc: string; color: string; disabled: boolean }[] = [
+const ENGINES: { value: Motor; label: string; desc: string; color: string; disabled: boolean; badgeText?: string }[] = [
   {
     value: 'MySQL',
     label: 'MySQL 8.0',
@@ -49,6 +49,21 @@ const ENGINES: { value: Motor; label: string; desc: string; color: string; disab
     desc: 'Microsoft\'s enterprise-grade relational database engine.',
     color: '#A855F7',
     disabled: false,
+  },
+  {
+    // 2026-08-14: deshabilitado tras probar la Mongo Provisioning API en vivo —
+    // POST /databases devuelve un connectionString con host "localhost" (no un
+    // host público real), lo que dejaría a cualquier usuario con una base
+    // imposible de conectar desde fuera del proveedor. No es un bug de ABA:
+    // hay que resolverlo con el equipo de esa API antes de reactivar el motor.
+    // Badge "Pronto" (no "En mantenimiento") porque nunca estuvo activo para
+    // usuarios reales — es una función nueva bloqueada, no una pausa.
+    value: 'MongoDB',
+    label: 'MongoDB',
+    desc: 'Document-oriented NoSQL database. Great for flexible schemas.',
+    color: '#22C55E',
+    disabled: true,
+    badgeText: 'Pronto',
   },
 ]
 
@@ -98,7 +113,7 @@ export default function NewDatabasePage() {
       </div>
 
       {/* Engine selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {ENGINES.map(engine => (
           <button
             key={engine.value}
@@ -124,7 +139,7 @@ export default function NewDatabasePage() {
                   <p className={`text-[15px] font-semibold ${engine.disabled ? 'text-[#71717A]' : 'text-[#F5F5F5]'}`}>{engine.label}</p>
                 </div>
               </div>
-              {engine.disabled && <Badge variant="warning" size="xs">En mantenimiento</Badge>}
+              {engine.disabled && <Badge variant="warning" size="xs">{engine.badgeText ?? 'En mantenimiento'}</Badge>}
             </div>
             <p className="text-[13px] text-[#71717A]">{engine.desc}</p>
 

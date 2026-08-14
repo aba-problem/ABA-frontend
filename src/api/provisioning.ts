@@ -37,7 +37,7 @@ import type { ProvisioningResult } from './types'
  * - 429 Too Many Requests: Rate limit hit (1 per 10 minutes)
  * - 503 Service Unavailable: Database engine temporarily unavailable
  *
- * @param motor - Database engine: 'MySQL' or 'SQLServer'
+ * @param motor - Database engine: 'MySQL', 'SQLServer' or 'MongoDB'
  * @returns Provisioning result with credentials, or error
  *
  * @example
@@ -53,6 +53,6 @@ import type { ProvisioningResult } from './types'
  * enviamos `{ nombreMotor: motor }` basado en `ProvisioningRequest.cs`, pero
  * el campo exacto del motor puede cambiar.
  */
-export async function createDatabase(motor: 'MySQL' | 'SQLServer') {
+export async function createDatabase(motor: 'MySQL' | 'SQLServer' | 'MongoDB') {
   return apiPost<ProvisioningResult>('/provisioning/crear', { nombreMotor: motor })
 }
