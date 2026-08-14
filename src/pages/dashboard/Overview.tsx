@@ -101,9 +101,14 @@ export default function DashboardOverview() {
     }
   }, [user, setUser])
 
-  const activeDbs = databases.filter(d => d.estado === 'ACTIVA')
-  const totalStorage = databases.reduce((sum, d) => sum + d.espacioUtilizadoMB, 0)
-  const maxStorage = databases.reduce((sum, d) => sum + d.espacioMaximoMB, 0) || 512
+  // El Overview es "estado actual de tu infraestructura", no un historial — a
+  // diferencia de DatabasesPage (que sí muestra todo, incluidas ELIMINADA, como
+  // registro completo a propósito), acá una base que ya borraste no debería
+  // contar ni ocupar un lugar en el preview de accesos rápidos.
+  const visibleDbs = databases.filter(d => d.estado !== 'ELIMINADA')
+  const activeDbs = visibleDbs.filter(d => d.estado === 'ACTIVA')
+  const totalStorage = visibleDbs.reduce((sum, d) => sum + d.espacioUtilizadoMB, 0)
+  const maxStorage = visibleDbs.reduce((sum, d) => sum + d.espacioMaximoMB, 0) || 512
 
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-8">
@@ -127,7 +132,7 @@ export default function DashboardOverview() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Database} label="Bases totales" value={databases.length} color="#3B82F6" />
+          <StatCard icon={Database} label="Bases totales" value={visibleDbs.length} color="#3B82F6" />
           <StatCard icon={Activity} label="Activas" value={activeDbs.length} color="#22C55E" />
           <StatCard icon={HardDrive} label="Uso actual" value={`${totalStorage.toFixed(1)} MB`} color="#A855F7" />
           <StatCard icon={Clock} label="Cuota máxima" value={`${maxStorage} MB`} color="#EAB308" />
@@ -150,7 +155,7 @@ export default function DashboardOverview() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2].map(i => <SkeletonCard key={i} />)}
           </div>
-        ) : databases.length === 0 ? (
+        ) : visibleDbs.length === 0 ? (
           <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] p-12 text-center">
             <div className="w-12 h-12 rounded-[12px] bg-[#1E2D4A] border border-[#1E3A6E] flex items-center justify-center mx-auto mb-4">
               <Database size={20} className="text-[#3B82F6]" />
@@ -169,7 +174,7 @@ export default function DashboardOverview() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {databases.slice(0, 6).map(db => (
+            {visibleDbs.slice(0, 6).map(db => (
               <button
                 key={db.id}
                 onClick={() => navigate(`/dashboard/databases/${db.id}`)}
