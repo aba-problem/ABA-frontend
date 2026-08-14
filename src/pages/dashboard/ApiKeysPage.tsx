@@ -26,6 +26,7 @@ import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
 import {
   KeyRound, ArrowLeft, Copy, Check, AlertTriangle, Trash2, ChevronDown, ChevronUp,
+  BookOpen, HelpCircle,
 } from 'lucide-react'
 
 function formatDate(iso: string | null): string {
@@ -52,6 +53,18 @@ export default function ApiKeysPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [consumo, setConsumo] = useState<Record<number, ApiKeyConsumoDia[]>>({})
   const [consumoLoading, setConsumoLoading] = useState<number | null>(null)
+
+  const [showTutorial, setShowTutorial] = useState(true)
+  const [copiedCurl, setCopiedCurl] = useState(false)
+  const curlEjemplo = 'curl -X POST https://api.aba.andrescortes.dev/ai/completar \\\n' +
+    '  -H "X-API-Key: TU_KEY_AQUI" \\\n' +
+    '  -H "Content-Type: application/json" \\\n' +
+    '  -d \'{"prompt": "Explica qué es una API REST", "maxTokens": 256}\''
+  const copyCurl = async () => {
+    await navigator.clipboard.writeText(curlEjemplo)
+    setCopiedCurl(true)
+    setTimeout(() => setCopiedCurl(false), 2000)
+  }
 
   const loadKeys = async () => {
     setLoading(true)
@@ -146,6 +159,76 @@ export default function ApiKeysPage() {
         <Button variant="primary" size="md" loading={creating} onClick={handleCreate} iconLeft={<KeyRound size={14} />}>
           Crear API key
         </Button>
+      </div>
+
+      {/* Tutorial breve — cómo generar, usar y recuperar el acceso si se pierde la key */}
+      <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] overflow-hidden">
+        <button
+          onClick={() => setShowTutorial(s => !s)}
+          className="w-full flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-[#18181B] transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <BookOpen size={15} className="text-[#3B82F6]" />
+            <span className="text-[14px] font-semibold text-[#F5F5F5]">Cómo usarla</span>
+          </div>
+          {showTutorial ? <ChevronUp size={14} className="text-[#71717A]" /> : <ChevronDown size={14} className="text-[#71717A]" />}
+        </button>
+
+        {showTutorial && (
+          <div className="px-4 pb-5 space-y-4">
+            <ol className="space-y-3">
+              <li className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-[#1E2D4A] border border-[#1E3A6E] text-[#60A5FA] text-[11px] font-semibold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <p className="text-[13px] text-[#A1A1AA]">
+                  Creá una key con el botón <span className="text-[#F5F5F5] font-medium">&quot;Crear API key&quot;</span> de arriba.
+                  Te va a mostrar el valor completo <span className="text-[#F5F5F5]">una única vez</span>.
+                </p>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-[#1E2D4A] border border-[#1E3A6E] text-[#60A5FA] text-[11px] font-semibold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <p className="text-[13px] text-[#A1A1AA]">
+                  Copiala y guardala en un lugar seguro (variable de entorno, gestor de secretos). Después de cerrar
+                  ese modal, ABA ya no puede volver a mostrártela — solo guarda un hash, no el valor real (igual que GitHub o Stripe).
+                </p>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-[#1E2D4A] border border-[#1E3A6E] text-[#60A5FA] text-[11px] font-semibold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-[#A1A1AA] mb-2">
+                    Usala en el header <span className="font-mono text-[#F5F5F5]">X-API-Key</span> de tus llamadas a{' '}
+                    <span className="font-mono text-[#F5F5F5]">POST /ai/completar</span>:
+                  </p>
+                  <div className="rounded-[10px] border border-[#2B2D31] bg-[#09090B] p-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] text-[#52525B] uppercase tracking-wider">Ejemplo</span>
+                      <button
+                        onClick={copyCurl}
+                        className="flex items-center gap-1 text-[11px] text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
+                      >
+                        {copiedCurl ? <Check size={11} /> : <Copy size={11} />}
+                        {copiedCurl ? 'Copiado' : 'Copiar'}
+                      </button>
+                    </div>
+                    <pre className="text-[11.5px] font-mono text-[#A1A1AA] whitespace-pre-wrap break-all">{curlEjemplo}</pre>
+                  </div>
+                  <p className="text-[11px] text-[#52525B] mt-1.5">
+                    Límite compartido: hasta 8 solicitudes/min entre todos los usuarios de ABA. Si te toca un 503, esperá un momento y reintentá.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-[#2A1010] border border-[#7F1D1D] text-[#F87171] text-[11px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                  <HelpCircle size={12} />
+                </span>
+                <p className="text-[13px] text-[#A1A1AA]">
+                  <span className="text-[#F5F5F5] font-medium">¿Perdiste la key o se filtró?</span> No hay forma de volver
+                  a verla — revocala con el ícono de basurero en la lista de abajo y creá una nueva. Es instantáneo y no
+                  afecta tus otras keys activas.
+                </p>
+              </li>
+            </ol>
+          </div>
+        )}
       </div>
 
       {error && (

@@ -219,7 +219,7 @@ export default function DnsPage() {
           <div>
             <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
               Subdominio
-              <Tooltip text="El nombre que quieres usar antes de .aba.andrescortes.dev — por ejemplo 'app' crea app.aba.andrescortes.dev." />
+              <Tooltip text="El nombre que quieres usar antes de .aba.coderhivex.com — por ejemplo 'app' crea app.aba.coderhivex.com." />
             </label>
             <div className="flex items-center">
               <input
@@ -230,7 +230,7 @@ export default function DnsPage() {
                 className={`${inputClass} w-full rounded-r-none font-mono`}
               />
               <span className="h-9 px-2.5 inline-flex items-center rounded-r-[10px] border border-l-0 border-[#2B2D31] bg-[#09090B] text-[11px] text-[#52525B] font-mono">
-                .aba.andrescortes.dev
+                .aba.coderhivex.com
               </span>
             </div>
           </div>
