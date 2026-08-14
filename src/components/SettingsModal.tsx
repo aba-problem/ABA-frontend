@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from 'react'
 import { User, Palette, History, X } from 'lucide-react'
 import { AppearanceSection, ProfileSection } from './SettingsSections'
 import { SesionesSection } from './SesionesSection'
+import { MascotHelpButton } from './MascotGuide'
 
 type Tab = 'perfil' | 'apariencia' | 'sesiones'
 
@@ -29,6 +30,21 @@ const TABS: { id: Tab; label: string; icon: typeof User }[] = [
   { id: 'perfil', label: 'Perfil', icon: User },
   { id: 'apariencia', label: 'Apariencia', icon: Palette },
   { id: 'sesiones', label: 'Registros de sesión', icon: History },
+]
+
+const SETTINGS_TOUR = [
+  {
+    title: 'Tu configuración, en un solo lugar',
+    body: 'A la izquierda tenés las categorías: Perfil, Apariencia y Registros de sesión. Se abre como ventana flotante para que no pierdas de vista dónde estabas.',
+  },
+  {
+    title: 'Perfil y Apariencia',
+    body: 'En "Perfil" ves tus datos de cuenta. En "Apariencia" podés cambiar el tema claro/oscuro de toda la plataforma.',
+  },
+  {
+    title: 'Registros de sesión',
+    body: 'Acá ves tus inicios de sesión recientes agrupados por día, con ciudad y navegador cuando los tenemos. Si ves un inicio de sesión que no reconocés, usá "No fui yo, bloquear" en esa fila para cortarle el acceso a esa IP al instante.',
+  },
 ]
 
 interface SettingsModalProps {
@@ -106,6 +122,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           </div>
         </div>
       </div>
+
+      <MascotHelpButton tourId="settings" steps={SETTINGS_TOUR} />
     </div>
   )
 }

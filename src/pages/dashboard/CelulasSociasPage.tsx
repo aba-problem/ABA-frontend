@@ -31,9 +31,25 @@ import { Modal } from '../../ds/Modal'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { Pagination } from '../../ds/Pagination'
 import { Tooltip } from '../../ds/Tooltip'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   ArrowLeft, Building2, Plus, Check, Copy, ShieldOff, ShieldCheck, KeyRound,
 } from 'lucide-react'
+
+const CELULAS_TOUR = [
+  {
+    title: 'Solo para administradores',
+    body: 'Acá das de alta equipos externos ("células socias") que consumen /partners/databases con su propia API key — es infraestructura administrativa, no algo que use un usuario normal.',
+  },
+  {
+    title: 'El prefijo es para siempre',
+    body: 'Aísla los nombres de bases/usuarios de esa célula del resto — evita colisiones entre equipos. No se puede cambiar después de crearla, así que elegilo con cuidado.',
+  },
+  {
+    title: 'La key se muestra una sola vez',
+    body: 'Al crear la célula o rotar su key, el valor completo aparece una única vez — entregalo por un canal cifrado, nunca copiado y pegado en un chat abierto. Si se filtró, rotala con el ícono de llave: la vieja deja de funcionar al instante.',
+  },
+]
 
 const PREFIJO_REGEX = /^[a-z0-9_]{2,20}$/
 const PAGE_SIZE = 5
@@ -332,6 +348,8 @@ export default function CelulasSociasPage() {
           </div>
         )}
       </Modal>
+
+      <MascotHelpButton tourId="celulas-socias" steps={CELULAS_TOUR} />
     </div>
   )
 }

@@ -24,9 +24,25 @@ import { Button } from '../../ds/Button'
 import { Modal } from '../../ds/Modal'
 import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   Workflow, ArrowLeft, Copy, Check, AlertTriangle, Trash2,
 } from 'lucide-react'
+
+const N8N_TOUR = [
+  {
+    title: '¿Qué es esto?',
+    body: 'N8N es una herramienta de automatización — conectá servicios entre sí para que se ejecuten solos, sin que tengas que estar mirando. Acá te damos tu propio workspace.',
+  },
+  {
+    title: 'Solo uno por usuario',
+    body: 'Cada cuenta tiene un único workspace activo. El nombre y la contraseña se generan automáticamente al crearlo — no hay nada que configurar a mano.',
+  },
+  {
+    title: 'Guardá la contraseña ya',
+    body: 'A diferencia de las bases de datos, acá no hay forma de volver a consultarla después — se muestra una única vez en el modal de creación. Si la perdés, tenés que eliminar el workspace y crear uno nuevo.',
+  },
+]
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -261,6 +277,8 @@ export default function N8nPage() {
           </div>
         )}
       </Modal>
+
+      <MascotHelpButton tourId="n8n" steps={N8N_TOUR} />
     </div>
   )
 }

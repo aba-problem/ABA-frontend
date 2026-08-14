@@ -25,9 +25,25 @@ import { createDatabase } from '../../api/provisioning'
 import { Button } from '../../ds/Button'
 import { Badge } from '../../ds/Badge'
 import { Modal } from '../../ds/Modal'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   Database, ArrowLeft, Copy, Check, Terminal,
 } from 'lucide-react'
+
+const NEW_DATABASE_TOUR = [
+  {
+    title: 'Elegí un motor',
+    body: 'MySQL y SQL Server están disponibles para crear ahora mismo. MongoDB está marcado "Pronto" — todavía no, un tema pendiente con el proveedor externo, no con ABA.',
+  },
+  {
+    title: 'Un clic y listo',
+    body: 'No hay formularios que llenar: el nombre, usuario y contraseña se generan solos, seguros, del lado del servidor.',
+  },
+  {
+    title: 'La contraseña se muestra UNA vez',
+    body: 'Cuando termine de crearse, vas a ver la contraseña completa en pantalla — copiala ahí mismo. Después solo la volvés a ver con "Ver credenciales" en el detalle de la base, y con un límite de 5 consultas por hora.',
+  },
+]
 
 /** Supported database engine types. */
 type Motor = 'MySQL' | 'SQLServer' | 'MongoDB'
@@ -241,6 +257,8 @@ export default function NewDatabasePage() {
           </div>
         )}
       </Modal>
+
+      <MascotHelpButton tourId="new-database" steps={NEW_DATABASE_TOUR} />
     </div>
   )
 }

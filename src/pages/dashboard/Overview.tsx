@@ -24,9 +24,29 @@ import { listDatabases, getProfile } from '../../api/dashboard'
 import type { DashboardItem } from '../../api/types'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { StatusDot } from '../../ds/Badge'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   Database, ArrowRight, HardDrive, Activity, Clock,
 } from 'lucide-react'
+
+const OVERVIEW_TOUR = [
+  {
+    title: '¡Bienvenido a ABA!',
+    body: 'Soy tu guía por la plataforma. Te voy a ir mostrando cómo funciona cada sección la primera vez que entrás — después me encontrás con este mismo botón, abajo a la derecha, en cualquier vista.',
+  },
+  {
+    title: 'Tu resumen',
+    body: 'Acá arriba ves cuántas bases de datos tenés, cuántas están activas, y cuánto espacio estás usando contra tu cuota máxima.',
+  },
+  {
+    title: 'Tus bases de datos',
+    body: 'Un vistazo rápido a tus bases más recientes. Hacé clic en cualquiera para ver sus credenciales y detalles, o usá "+ Crear nueva" para aprovisionar una.',
+  },
+  {
+    title: 'El resto de la plataforma',
+    body: 'En el menú de la izquierda tenés Automatización N8N, IA como Servicio y Subdominios DNS — cada uno con su propia explicación la primera vez que entrés. Y en Configuración (abajo del menú) podés ver tu perfil, apariencia y tus registros de sesión.',
+  },
+]
 
 /** Reusable stat card used in the stats row. */
 function StatCard({ icon: Icon, label, value, color }: {
@@ -203,6 +223,8 @@ export default function DashboardOverview() {
           </div>
         )}
       </div>
+
+      <MascotHelpButton tourId="overview" steps={OVERVIEW_TOUR} />
     </div>
   )
 }

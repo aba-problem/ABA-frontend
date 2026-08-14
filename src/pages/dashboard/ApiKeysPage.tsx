@@ -24,10 +24,26 @@ import { Button } from '../../ds/Button'
 import { Modal } from '../../ds/Modal'
 import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   KeyRound, ArrowLeft, Copy, Check, AlertTriangle, Trash2, ChevronDown, ChevronUp,
   BookOpen, HelpCircle,
 } from 'lucide-react'
+
+const APIKEYS_TOUR = [
+  {
+    title: 'IA como Servicio',
+    body: 'Generá una key para que tus propios programas o scripts consuman IA en tu nombre, sin usar tu sesión de usuario.',
+  },
+  {
+    title: 'Se muestra una vez, como todo secreto',
+    body: 'Al crearla vas a ver el valor completo una única vez — después ABA solo guarda un hash, no puede volver a mostrártela. Más abajo en esta página tenés un tutorial completo con ejemplo de código.',
+  },
+  {
+    title: '¿Se filtró o la perdiste?',
+    body: 'Revocala con el ícono de basurero de la lista y creá una nueva — es instantáneo. También podés ver el consumo (llamadas y tokens) de cada key haciendo clic en "Consumo".',
+  },
+]
 
 function formatDate(iso: string | null): string {
   if (!iso) return 'Nunca'
@@ -376,6 +392,8 @@ export default function ApiKeysPage() {
           </div>
         )}
       </Modal>
+
+      <MascotHelpButton tourId="apikeys" steps={APIKEYS_TOUR} />
     </div>
   )
 }

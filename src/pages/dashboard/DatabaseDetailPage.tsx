@@ -29,10 +29,26 @@ import type { DashboardItem, Credencial } from '../../api/types'
 import { Skeleton, SkeletonText } from '../../ds/Skeleton'
 import { Badge, StatusDot } from '../../ds/Badge'
 import { Button } from '../../ds/Button'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   Database, ArrowLeft, Copy, Check, Eye, EyeOff, HardDrive,
   Activity, Clock, Server, User, Shield, Trash2,
 } from 'lucide-react'
+
+const DATABASE_DETAIL_TOUR = [
+  {
+    title: 'El anillo de almacenamiento',
+    body: 'Muestra cuánto espacio usás contra tu cuota máxima. Abajo, la columna de "Actividad" te dice cuándo se creó y cuándo se usó por última vez.',
+  },
+  {
+    title: 'Ver credenciales',
+    body: 'La contraseña no se muestra sola por seguridad — hacé clic en "Ver credenciales" para consultarla (hasta 5 veces por hora). El "connection string" de ahí es para pegar en tu código; para clientes gráficos como DBeaver usá los campos individuales.',
+  },
+  {
+    title: 'Eliminar base de datos',
+    body: 'Es una acción irreversible — perdés el acceso y todo lo que tenga guardado. Pedimos confirmación antes de ejecutarla, por las dudas.',
+  },
+]
 
 /** Traduce el estado técnico a algo legible sin saber qué significa cada valor crudo. */
 const ESTADO_LABEL: Record<string, string> = {
@@ -443,6 +459,8 @@ export default function DatabaseDetailPage() {
           </div>
         </div>
       </div>
+
+      <MascotHelpButton tourId="database-detail" steps={DATABASE_DETAIL_TOUR} />
     </div>
   )
 }

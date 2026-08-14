@@ -27,9 +27,25 @@ import { Button } from '../../ds/Button'
 import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { Tooltip } from '../../ds/Tooltip'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import {
   Globe, ArrowLeft, Trash2, AlertTriangle, Plus, Shield,
 } from 'lucide-react'
+
+const DNS_TOUR = [
+  {
+    title: 'Tu propio subdominio',
+    body: 'Elegí un nombre y se crea como "tu-nombre.aba.coderhivex.com". Es tuyo, no de ABA — sirve para apuntar a cualquier servicio que TÚ tengas corriendo en otro lado.',
+  },
+  {
+    title: 'El campo "Valor" es TU servidor',
+    body: 'No es la dirección de ABA — es la IP (tipo A) o el dominio (tipo CNAME) de donde vive lo que querés exponer. Si no tenés nada corriendo todavía, todavía no tiene sentido crear el registro.',
+  },
+  {
+    title: 'Propagación y límites',
+    body: 'Un registro cada 5 minutos, y tarda unos minutos en propagarse antes de que funcione. Podés eliminarlo cuando quieras con el ícono de basurero.',
+  },
+]
 
 /** Traduce el estado técnico a algo que no requiere saber qué es un "provisioning". */
 const ESTADO_LABEL: Record<string, string> = {
@@ -316,6 +332,8 @@ export default function DnsPage() {
           )}
         </div>
       )}
+
+      <MascotHelpButton tourId="dns" steps={DNS_TOUR} />
     </div>
   )
 }

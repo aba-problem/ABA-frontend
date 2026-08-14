@@ -22,7 +22,23 @@ import { listDatabases } from '../../api/dashboard'
 import type { DashboardItem } from '../../api/types'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { StatusDot } from '../../ds/Badge'
+import { MascotHelpButton } from '../../components/MascotGuide'
 import { Database, Search } from 'lucide-react'
+
+const DATABASES_TOUR = [
+  {
+    title: 'Todas tus bases',
+    body: 'Acá están todas tus bases de datos, no solo las más recientes. Usá el buscador para filtrar por nombre, motor o servidor.',
+  },
+  {
+    title: 'El color del punto importa',
+    body: 'Verde es activa, amarillo es pausada por inactividad, rojo es un estado de error o cuota excedida. Hacé clic en cualquier tarjeta para ver el detalle completo.',
+  },
+  {
+    title: 'La barra de espacio',
+    body: 'Se pone roja cuando pasás el 80% de tu cuota — es tu aviso para limpiar datos antes de acercarte al límite máximo.',
+  },
+]
 
 export default function DatabasesPage() {
   const navigate = useNavigate()
@@ -155,6 +171,8 @@ export default function DatabasesPage() {
           ))}
         </div>
       )}
+
+      <MascotHelpButton tourId="databases" steps={DATABASES_TOUR} />
     </div>
   )
 }
