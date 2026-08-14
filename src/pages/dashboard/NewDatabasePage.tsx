@@ -9,7 +9,7 @@
  *    success, a modal shows the new database credentials including
  *    the one-time `passwordTemporal`.
  *
- * Rate limit: 1 creation per 10 minutes (backend enforced).
+ * Rate limit: 1 creation per 2 minutes (backend enforced).
  * The success modal warns the user to copy the password as it won't
  * be shown again. Closing the modal navigates to the new database's
  * detail page.
