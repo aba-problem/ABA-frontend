@@ -15,9 +15,10 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme, THEME_OPTIONS } from '../contexts/ThemeContext'
-import { getProfile } from '../api/dashboard'
+import { getProfile, actualizarPerfil } from '../api/dashboard'
 import { SkeletonCard } from '../ds/Skeleton'
-import { User, Mail, Shield, Calendar, Clock, Check, Palette } from 'lucide-react'
+import { Button } from '../ds/Button'
+import { User, Mail, Shield, Calendar, Clock, Check, Palette, Pencil, X, RotateCcw } from 'lucide-react'
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -93,11 +94,17 @@ export function AppearanceSection() {
   )
 }
 
-/** Profile section — fetches and displays the user's identity. */
+/** Profile section — fetches, displays, and lets the user edit their identity. */
 export function ProfileSection() {
   const { user, setUser } = useAuth()
   const [loading, setLoading] = useState(!user)
   const [error, setError] = useState<string | null>(null)
+
+  const [editando, setEditando] = useState(false)
+  const [nombreForm, setNombreForm] = useState('')
+  const [avatarForm, setAvatarForm] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [errorGuardar, setErrorGuardar] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -115,6 +122,37 @@ export function ProfileSection() {
     return () => { cancelled = true }
   }, [setUser])
 
+  const empezarEdicion = () => {
+    if (!user) return
+    setNombreForm(user.nombre)
+    setAvatarForm(user.avatarUrl ?? '')
+    setErrorGuardar(null)
+    setEditando(true)
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(false)
+    setErrorGuardar(null)
+  }
+
+  const guardarPerfil = async () => {
+    const nombre = nombreForm.trim()
+    if (!nombre) {
+      setErrorGuardar('El nombre no puede estar vacío.')
+      return
+    }
+    setGuardando(true)
+    setErrorGuardar(null)
+    const result = await actualizarPerfil(nombre, avatarForm.trim() || null)
+    setGuardando(false)
+    if (result.ok) {
+      setUser(result.data)
+      setEditando(false)
+    } else {
+      setErrorGuardar(result.error.error)
+    }
+  }
+
   if (loading) return <SkeletonCard />
   if (error) {
     return (
@@ -128,27 +166,90 @@ export function ProfileSection() {
   return (
     <div className="space-y-6">
       <div className="rounded-[14px] border border-[var(--aba-border)] bg-[var(--aba-card)] p-6">
-        <div className="flex items-center gap-5 mb-6">
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="w-16 h-16 rounded-full" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center">
-              <span className="text-[24px] font-semibold text-[var(--aba-accent-text)]">
-                {user.nombre?.charAt(0)?.toUpperCase() || '?'}
-              </span>
-            </div>
-          )}
-          <div>
-            <h2 className="text-[20px] font-semibold text-[var(--aba-text)]">{user.nombre}</h2>
-            <p className="text-[13px] text-[var(--aba-text-muted)]">{user.correo}</p>
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-5 min-w-0">
+            {(editando ? avatarForm : user.avatarUrl) ? (
+              <img src={editando ? avatarForm : user.avatarUrl!} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" onError={e => { e.currentTarget.style.display = 'none' }} />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center shrink-0">
+                <span className="text-[24px] font-semibold text-[var(--aba-accent-text)]">
+                  {(editando ? nombreForm : user.nombre)?.charAt(0)?.toUpperCase() || '?'}
+                </span>
+              </div>
+            )}
+            {!editando && (
+              <div className="min-w-0">
+                <h2 className="text-[20px] font-semibold text-[var(--aba-text)] truncate">{user.nombre}</h2>
+                <p className="text-[13px] text-[var(--aba-text-muted)] truncate">{user.correo}</p>
+              </div>
+            )}
           </div>
+          {!editando && (
+            <Button variant="secondary" size="sm" iconLeft={<Pencil size={13} />} onClick={empezarEdicion}>
+              Editar
+            </Button>
+          )}
         </div>
 
-        <ProfileRow icon={User} label="Name" value={user.nombre} color="#3B82F6" />
-        <ProfileRow icon={Mail} label="Email" value={user.correo} color="#22C55E" />
-        <ProfileRow icon={Shield} label="Provider" value={user.proveedor} color="#A855F7" />
-        <ProfileRow icon={Calendar} label="Account created" value={formatDate(user.fechaCreacion)} color="#EAB308" />
-        <ProfileRow icon={Clock} label="Last login" value={formatDate(user.ultimoLogin)} color="#F97316" />
+        {editando ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[12px] text-[var(--aba-text-disabled)] mb-1.5">Nombre</label>
+              <input
+                type="text"
+                value={nombreForm}
+                onChange={e => setNombreForm(e.target.value)}
+                maxLength={150}
+                className="w-full h-9 px-3 rounded-[10px] border border-[var(--aba-border)] bg-[var(--aba-bg)] text-[14px] text-[var(--aba-text)] outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-[var(--aba-text-disabled)] mb-1.5">URL de foto de perfil</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={avatarForm}
+                  onChange={e => setAvatarForm(e.target.value)}
+                  placeholder="https://..."
+                  maxLength={500}
+                  className="flex-1 min-w-0 h-9 px-3 rounded-[10px] border border-[var(--aba-border)] bg-[var(--aba-bg)] text-[13px] font-mono text-[var(--aba-text)] outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                />
+                {avatarForm && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatarForm('')}
+                    title="Volver a usar la foto de Google/GitHub"
+                    className="w-9 h-9 rounded-[10px] border border-[var(--aba-border)] flex items-center justify-center text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card-hover)] transition-all cursor-pointer shrink-0"
+                  >
+                    <RotateCcw size={13} />
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--aba-text-disabled)] mt-1.5">
+                Pegá el link a una imagen. Dejalo vacío para volver a usar tu foto de {user.proveedor === 'GOOGLE' ? 'Google' : 'GitHub'}.
+              </p>
+            </div>
+
+            {errorGuardar && <p className="text-[12px] text-[#F87171]">{errorGuardar}</p>}
+
+            <div className="flex items-center gap-2 pt-1">
+              <Button variant="primary" size="sm" loading={guardando} onClick={guardarPerfil}>
+                Guardar cambios
+              </Button>
+              <Button variant="ghost" size="sm" iconLeft={<X size={13} />} onClick={cancelarEdicion} disabled={guardando}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <ProfileRow icon={User} label="Name" value={user.nombre} color="#3B82F6" />
+            <ProfileRow icon={Mail} label="Email" value={user.correo} color="#22C55E" />
+            <ProfileRow icon={Shield} label="Provider" value={user.proveedor} color="#A855F7" />
+            <ProfileRow icon={Calendar} label="Account created" value={formatDate(user.fechaCreacion)} color="#EAB308" />
+            <ProfileRow icon={Clock} label="Last login" value={formatDate(user.ultimoLogin)} color="#F97316" />
+          </>
+        )}
       </div>
     </div>
   )

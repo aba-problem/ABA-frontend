@@ -23,13 +23,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import { MascotHelpButton } from '../../components/MascotGuide'
+import { Badge } from '../../ds/Badge'
 import {
-  ArrowLeft, Table2, Trash2, KeyRound, X, Download, Plus, Eraser, Network, GripVertical,
+  ArrowLeft, Table2, Trash2, KeyRound, Link2, X, Download, Plus, Eraser, Network, GripVertical,
 } from 'lucide-react'
 
 // ─── Modelo de datos ────────────────────────────────────────────────────────
 
-type TipoColumna = 'INT' | 'VARCHAR' | 'TEXT' | 'DATE' | 'BOOLEAN' | 'DECIMAL'
+type TipoColumna =
+  | 'INT' | 'BIGINT' | 'SMALLINT' | 'VARCHAR' | 'CHAR' | 'TEXT'
+  | 'DATE' | 'DATETIME' | 'TIMESTAMP' | 'TIME'
+  | 'BOOLEAN' | 'DECIMAL' | 'FLOAT' | 'JSON' | 'UUID' | 'BLOB'
 type TipoRelacion = '1-1' | '1-N' | 'N-N'
 
 interface ColumnaDiagrama {
@@ -37,6 +41,7 @@ interface ColumnaDiagrama {
   nombre: string
   tipo: TipoColumna
   esPrimaryKey: boolean
+  esForeignKey: boolean
 }
 
 interface TablaDiagrama {
@@ -44,6 +49,7 @@ interface TablaDiagrama {
   nombre: string
   x: number
   y: number
+  color: string
   columnas: ColumnaDiagrama[]
 }
 
@@ -65,8 +71,23 @@ interface ConexionEnProgreso {
   mouseY: number
 }
 
-const TIPOS: TipoColumna[] = ['INT', 'VARCHAR', 'TEXT', 'DATE', 'BOOLEAN', 'DECIMAL']
+const TIPOS: TipoColumna[] = [
+  'INT', 'BIGINT', 'SMALLINT', 'VARCHAR', 'CHAR', 'TEXT',
+  'DATE', 'DATETIME', 'TIMESTAMP', 'TIME',
+  'BOOLEAN', 'DECIMAL', 'FLOAT', 'JSON', 'UUID', 'BLOB',
+]
 const TIPOS_RELACION: TipoRelacion[] = ['1-1', '1-N', 'N-N']
+
+// Paleta curada (no un hue 100% aleatorio) — así el color siempre queda legible
+// sobre el fondo oscuro, en vez de arriesgarse a un tono apagado o ilegible.
+const PALETA_COLORES = [
+  '#3B82F6', '#22C55E', '#A855F7', '#EAB308', '#EF4444', '#EC4899',
+  '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#06B6D4', '#F43F5E',
+]
+
+function colorAleatorio(): string {
+  return PALETA_COLORES[Math.floor(Math.random() * PALETA_COLORES.length)]
+}
 
 const TABLE_WIDTH = 210
 const HEADER_HEIGHT = 38
@@ -163,7 +184,8 @@ export default function DiagramEditorPage() {
         nombre: `Tabla_${prev.length + 1}`,
         x: 60 + col * 260,
         y: 60 + fila * 220,
-        columnas: [{ id: generarId(), nombre: 'id', tipo: 'INT', esPrimaryKey: true }],
+        color: colorAleatorio(),
+        columnas: [{ id: generarId(), nombre: 'id', tipo: 'INT', esPrimaryKey: true, esForeignKey: false }],
       }
       return [...prev, t]
     })
@@ -192,7 +214,7 @@ export default function DiagramEditorPage() {
 
   const agregarColumna = useCallback((tablaId: string) => {
     setTablas(prev => prev.map(t => (t.id === tablaId
-      ? { ...t, columnas: [...t.columnas, { id: generarId(), nombre: `columna_${t.columnas.length + 1}`, tipo: 'VARCHAR', esPrimaryKey: false }] }
+      ? { ...t, columnas: [...t.columnas, { id: generarId(), nombre: `columna_${t.columnas.length + 1}`, tipo: 'VARCHAR', esPrimaryKey: false, esForeignKey: false }] }
       : t)))
   }, [])
 
@@ -211,6 +233,12 @@ export default function DiagramEditorPage() {
   const togglePk = useCallback((tablaId: string, columnaId: string) => {
     setTablas(prev => prev.map(t => (t.id === tablaId
       ? { ...t, columnas: t.columnas.map(c => (c.id === columnaId ? { ...c, esPrimaryKey: !c.esPrimaryKey } : c)) }
+      : t)))
+  }, [])
+
+  const toggleFk = useCallback((tablaId: string, columnaId: string) => {
+    setTablas(prev => prev.map(t => (t.id === tablaId
+      ? { ...t, columnas: t.columnas.map(c => (c.id === columnaId ? { ...c, esForeignKey: !c.esForeignKey } : c)) }
       : t)))
   }, [])
 
@@ -380,7 +408,10 @@ export default function DiagramEditorPage() {
             <Network size={18} className="text-[#3B82F6]" />
           </div>
           <div>
-            <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Diagramador</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[24px] font-semibold text-[#F5F5F5] tracking-tight">Diagramador</h1>
+              <Badge variant="info" size="xs">Beta</Badge>
+            </div>
             <p className="text-[13px] text-[#71717A]">Planeá la estructura de tu base con tablas y relaciones, sin escribir SQL.</p>
           </div>
         </div>
@@ -470,6 +501,7 @@ export default function DiagramEditorPage() {
                 onRenameColumn={renombrarColumna}
                 onChangeTipo={cambiarTipoColumna}
                 onTogglePk={togglePk}
+                onToggleFk={toggleFk}
                 onDeleteColumn={eliminarColumna}
                 onStartConnection={iniciarConexion}
               />
@@ -522,7 +554,7 @@ function Button({ onClick, icon, label, primary, loading, disabled }: {
 // ─── Caja de tabla ──────────────────────────────────────────────────────────
 
 function TablaBox({
-  tabla, onDragStart, onRename, onDelete, onAddColumn, onRenameColumn, onChangeTipo, onTogglePk, onDeleteColumn, onStartConnection,
+  tabla, onDragStart, onRename, onDelete, onAddColumn, onRenameColumn, onChangeTipo, onTogglePk, onToggleFk, onDeleteColumn, onStartConnection,
 }: {
   tabla: TablaDiagrama
   onDragStart: (e: React.PointerEvent, tabla: TablaDiagrama) => void
@@ -532,25 +564,26 @@ function TablaBox({
   onRenameColumn: (tablaId: string, columnaId: string, nombre: string) => void
   onChangeTipo: (tablaId: string, columnaId: string, tipo: TipoColumna) => void
   onTogglePk: (tablaId: string, columnaId: string) => void
+  onToggleFk: (tablaId: string, columnaId: string) => void
   onDeleteColumn: (tablaId: string, columnaId: string) => void
   onStartConnection: (e: React.PointerEvent, tabla: TablaDiagrama, columna: ColumnaDiagrama, indice: number) => void
 }) {
   return (
     <div
-      style={{ left: tabla.x, top: tabla.y, width: TABLE_WIDTH }}
-      className="absolute rounded-[10px] border border-[#2B2D31] bg-[#18181B] shadow-[0_8px_24px_rgba(0,0,0,0.4)] select-none"
+      style={{ left: tabla.x, top: tabla.y, width: TABLE_WIDTH, borderLeft: `3px solid ${tabla.color}` }}
+      className="absolute rounded-[10px] border-y border-r border-[#2B2D31] bg-[#18181B] shadow-[0_8px_24px_rgba(0,0,0,0.4)] select-none"
     >
       <div
         onPointerDown={e => onDragStart(e, tabla)}
-        style={{ height: HEADER_HEIGHT }}
-        className="flex items-center gap-1.5 px-1.5 rounded-t-[10px] bg-[#1C1C1F] border-b border-[#2B2D31] cursor-move"
+        style={{ height: HEADER_HEIGHT, backgroundColor: `${tabla.color}1F` }}
+        className="flex items-center gap-1.5 px-1.5 rounded-tr-[9px] border-b border-[#2B2D31] cursor-move"
       >
         {/* Handle dedicado: el input de nombre ocupa casi todo el header (flex-1), así
             que sin esto casi no queda superficie de header "vacía" para agarrar y arrastrar. */}
         <div className="w-5 h-5 flex items-center justify-center text-[#52525B] shrink-0 cursor-grab">
           <GripVertical size={13} />
         </div>
-        <Table2 size={13} className="text-[#3B82F6] shrink-0" />
+        <Table2 size={13} className="shrink-0" style={{ color: tabla.color }} />
         <input
           value={tabla.nombre}
           onChange={e => onRename(tabla.id, e.target.value)}
@@ -580,6 +613,13 @@ function TablaBox({
               className={`shrink-0 cursor-pointer ${c.esPrimaryKey ? 'text-[#EAB308]' : 'text-[#3F3F46] hover:text-[#71717A]'}`}
             >
               <KeyRound size={11} />
+            </button>
+            <button
+              onClick={() => onToggleFk(tabla.id, c.id)}
+              title="Foreign key"
+              className={`shrink-0 cursor-pointer ${c.esForeignKey ? 'text-[#3B82F6]' : 'text-[#3F3F46] hover:text-[#71717A]'}`}
+            >
+              <Link2 size={11} />
             </button>
             <input
               value={c.nombre}

@@ -187,6 +187,20 @@ export async function apiPatch<T>(path: string, body?: unknown): Promise<ApiResu
   return apiRequest<T>('PATCH', path, body)
 }
 
+/**
+ * Performs a PUT request to the ABA backend.
+ *
+ * Automatically includes the CSRF token header for CSRF protection.
+ *
+ * @typeParam T - Expected response type
+ * @param path - API path (e.g. '/dashboard/perfil')
+ * @param body - Request body (will be JSON-serialized)
+ * @returns Typed result with data or error
+ */
+export async function apiPut<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
+  return apiRequest<T>('PUT', path, body)
+}
+
 // ─── Core Request Engine ───────────────────────────────────────────────────
 
 /**

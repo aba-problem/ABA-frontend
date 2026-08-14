@@ -50,7 +50,7 @@ const NAV_ITEMS: {
 }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', end: true },
   { to: '/dashboard/databases', icon: Database, label: 'Bases de datos' },
-  { to: '/dashboard/diagramador', icon: Network, label: 'Diagramador' },
+  { to: '/dashboard/diagramador', icon: Network, label: 'Diagramador', badge: { text: 'Beta', variant: 'info' } },
   { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
   { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio' },
   { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS' },

@@ -16,7 +16,7 @@
  * @see ABA-backend/Controllers/DashboardController.cs
  */
 
-import { apiGet, apiPost, apiDelete } from './client'
+import { apiGet, apiPost, apiPut, apiDelete } from './client'
 import type { DashboardItem, Credencial, Usuario } from './types'
 
 /**
@@ -117,4 +117,20 @@ export async function deleteDatabase(id: number) {
  */
 export async function getProfile() {
   return apiGet<Usuario>('/dashboard/perfil')
+}
+
+/**
+ * Updates the authenticated user's display name and/or avatar.
+ *
+ * Calls `PUT /dashboard/perfil`. This never overwrites what Google/GitHub
+ * report at the next login — the backend stores the customization in
+ * separate columns, so it survives re-authentication.
+ *
+ * @param nombre - New display name (required, cannot be blank)
+ * @param avatarUrl - New avatar URL, or `null`/empty to revert to the
+ *   provider's real photo
+ * @returns The updated profile, or error
+ */
+export async function actualizarPerfil(nombre: string, avatarUrl: string | null) {
+  return apiPut<Usuario>('/dashboard/perfil', { nombre, avatarUrl })
 }
