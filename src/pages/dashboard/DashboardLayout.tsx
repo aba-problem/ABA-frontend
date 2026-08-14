@@ -25,6 +25,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Badge, type BadgeVariant } from '../../ds/Badge'
 import { SettingsModal } from '../../components/SettingsModal'
+import { useAvatarLocal } from '../../hooks/useAvatarLocal'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
   Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, Building2, Network,
@@ -64,6 +65,7 @@ export default function DashboardLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { logout, user } = useAuth()
   const navigate = useNavigate()
+  const avatarLocalUrl = useAvatarLocal(user?.usuarioId)
 
   const handleLogout = async () => {
     await logout()
@@ -112,6 +114,7 @@ export default function DashboardLayout() {
           {navItems.map(item => (
             <NavLink
               key={item.to}
+              data-tour={`sidebar-${item.to.split('/').pop()}`}
               to={item.to}
               onClick={() => setMobileOpen(false)}
               end={item.end}
@@ -221,8 +224,8 @@ export default function DashboardLayout() {
                 onClick={() => setSettingsOpen(true)}
                 className="flex items-center gap-2.5 cursor-pointer group"
               >
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-7 h-7 rounded-full" />
+                {(avatarLocalUrl ?? user.avatarUrl) ? (
+                  <img src={avatarLocalUrl ?? user.avatarUrl!} alt="" className="w-7 h-7 rounded-full object-cover" />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center">
                     <span className="text-[11px] font-semibold text-[var(--aba-accent-text)]">

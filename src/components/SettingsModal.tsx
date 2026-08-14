@@ -34,16 +34,22 @@ const TABS: { id: Tab; label: string; icon: typeof User }[] = [
 
 const SETTINGS_TOUR = [
   {
-    title: 'Tu configuración, en un solo lugar',
-    body: 'A la izquierda tenés las categorías: Perfil, Apariencia y Registros de sesión. Se abre como ventana flotante para que no pierdas de vista dónde estabas.',
+    title: 'Perfil',
+    body: 'Tus datos de cuenta — desde acá podés editar tu nombre y arrastrar una foto de perfil (queda guardada solo en este navegador, nunca se sube a ningún servidor).',
+    selector: '[data-tour="settings-tab-perfil"]',
+    tipo: 'editar' as const,
   },
   {
-    title: 'Perfil y Apariencia',
-    body: 'En "Perfil" ves tus datos de cuenta. En "Apariencia" podés cambiar el tema claro/oscuro de toda la plataforma.',
+    title: 'Apariencia',
+    body: 'Cambiá el tema claro/oscuro de toda la plataforma.',
+    selector: '[data-tour="settings-tab-apariencia"]',
+    tipo: 'editar' as const,
   },
   {
     title: 'Registros de sesión',
-    body: 'Acá ves tus inicios de sesión recientes agrupados por día, con ciudad y navegador cuando los tenemos. Si ves un inicio de sesión que no reconocés, usá "No fui yo, bloquear" en esa fila para cortarle el acceso a esa IP al instante.',
+    body: 'Tus inicios de sesión recientes agrupados por día, con ciudad y navegador cuando los tenemos. Si ves uno que no reconocés, "No fui yo, bloquear" corta el acceso a esa IP al instante.',
+    selector: '[data-tour="settings-tab-sesiones"]',
+    tipo: 'estado' as const,
   },
 ]
 
@@ -91,6 +97,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           {TABS.map(t => (
             <button
               key={t.id}
+              data-tour={`settings-tab-${t.id}`}
               onClick={() => setTab(t.id)}
               className={`flex items-center gap-2.5 h-9 px-2.5 rounded-[8px] text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
                 tab === t.id

@@ -12,13 +12,15 @@
  * @see components/SettingsModal.tsx — overlay version
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme, THEME_OPTIONS } from '../contexts/ThemeContext'
 import { getProfile, actualizarPerfil } from '../api/dashboard'
+import { guardarAvatarLocal, borrarAvatarLocal, AVATAR_MAX_BYTES, AVATAR_TIPOS_PERMITIDOS } from '../lib/avatarStore'
+import { useAvatarLocal } from '../hooks/useAvatarLocal'
 import { SkeletonCard } from '../ds/Skeleton'
 import { Button } from '../ds/Button'
-import { User, Mail, Shield, Calendar, Clock, Check, Palette, Pencil, X, RotateCcw } from 'lucide-react'
+import { User, Mail, Shield, Calendar, Clock, Check, Palette, Pencil, X, ImagePlus, Trash2 } from 'lucide-react'
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -102,9 +104,16 @@ export function ProfileSection() {
 
   const [editando, setEditando] = useState(false)
   const [nombreForm, setNombreForm] = useState('')
-  const [avatarForm, setAvatarForm] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState<string | null>(null)
+
+  const [arrastrando, setArrastrando] = useState(false)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Foto local (IndexedDB, nunca pasó por el backend) — el hook se re-sincroniza
+  // solo cuando guardarAvatarLocal/borrarAvatarLocal disparan su evento de cambio.
+  const avatarLocalUrl = useAvatarLocal(user?.usuarioId)
 
   useEffect(() => {
     let cancelled = false
@@ -125,7 +134,6 @@ export function ProfileSection() {
   const empezarEdicion = () => {
     if (!user) return
     setNombreForm(user.nombre)
-    setAvatarForm(user.avatarUrl ?? '')
     setErrorGuardar(null)
     setEditando(true)
   }
@@ -143,7 +151,8 @@ export function ProfileSection() {
     }
     setGuardando(true)
     setErrorGuardar(null)
-    const result = await actualizarPerfil(nombre, avatarForm.trim() || null)
+    // La foto ya no viaja al backend — vive solo en este navegador (IndexedDB).
+    const result = await actualizarPerfil(nombre, null)
     setGuardando(false)
     if (result.ok) {
       setUser(result.data)
@@ -151,6 +160,45 @@ export function ProfileSection() {
     } else {
       setErrorGuardar(result.error.error)
     }
+  }
+
+  const procesarArchivoFoto = async (file: File) => {
+    if (!user) return
+    if (!AVATAR_TIPOS_PERMITIDOS.includes(file.type)) {
+      setErrorGuardar('Formato no soportado — usá PNG, JPG, WEBP o GIF.')
+      return
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      setErrorGuardar('La imagen pesa demasiado — máximo 5 MB.')
+      return
+    }
+    setSubiendoFoto(true)
+    setErrorGuardar(null)
+    try {
+      await guardarAvatarLocal(user.usuarioId, file)
+    } catch {
+      setErrorGuardar('No se pudo guardar la foto en este navegador.')
+    } finally {
+      setSubiendoFoto(false)
+    }
+  }
+
+  const quitarFoto = async () => {
+    if (!user) return
+    await borrarAvatarLocal(user.usuarioId).catch(() => {})
+  }
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setArrastrando(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) procesarArchivoFoto(file)
+  }
+
+  const onSeleccionarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) procesarArchivoFoto(file)
   }
 
   if (loading) return <SkeletonCard />
@@ -163,13 +211,15 @@ export function ProfileSection() {
   }
   if (!user) return null
 
+  const fotoActual = avatarLocalUrl ?? user.avatarUrl
+
   return (
     <div className="space-y-6">
       <div className="rounded-[14px] border border-[var(--aba-border)] bg-[var(--aba-card)] p-6">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-5 min-w-0">
-            {(editando ? avatarForm : user.avatarUrl) ? (
-              <img src={editando ? avatarForm : user.avatarUrl!} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" onError={e => { e.currentTarget.style.display = 'none' }} />
+            {fotoActual ? (
+              <img src={fotoActual} alt="" className="w-16 h-16 rounded-full object-cover shrink-0" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center shrink-0">
                 <span className="text-[24px] font-semibold text-[var(--aba-accent-text)]">
@@ -192,7 +242,7 @@ export function ProfileSection() {
         </div>
 
         {editando ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <label className="block text-[12px] text-[var(--aba-text-disabled)] mb-1.5">Nombre</label>
               <input
@@ -203,31 +253,45 @@ export function ProfileSection() {
                 className="w-full h-9 px-3 rounded-[10px] border border-[var(--aba-border)] bg-[var(--aba-bg)] text-[14px] text-[var(--aba-text)] outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
               />
             </div>
+
             <div>
-              <label className="block text-[12px] text-[var(--aba-text-disabled)] mb-1.5">URL de foto de perfil</label>
-              <div className="flex items-center gap-2">
+              <label className="block text-[12px] text-[var(--aba-text-disabled)] mb-1.5">Foto de perfil</label>
+              <div
+                onDragOver={e => { e.preventDefault(); setArrastrando(true) }}
+                onDragLeave={() => setArrastrando(false)}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`rounded-[10px] border-2 border-dashed p-4 flex items-center gap-3 cursor-pointer transition-all ${
+                  arrastrando ? 'border-[#3B82F6] bg-[#1E2D4A]/30' : 'border-[var(--aba-border)] hover:border-[var(--aba-text-muted)]'
+                }`}
+              >
                 <input
-                  type="text"
-                  value={avatarForm}
-                  onChange={e => setAvatarForm(e.target.value)}
-                  placeholder="https://..."
-                  maxLength={500}
-                  className="flex-1 min-w-0 h-9 px-3 rounded-[10px] border border-[var(--aba-border)] bg-[var(--aba-bg)] text-[13px] font-mono text-[var(--aba-text)] outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                  ref={fileInputRef}
+                  type="file"
+                  accept={AVATAR_TIPOS_PERMITIDOS.join(',')}
+                  onChange={onSeleccionarArchivo}
+                  className="hidden"
                 />
-                {avatarForm && (
-                  <button
-                    type="button"
-                    onClick={() => setAvatarForm('')}
-                    title="Volver a usar la foto de Google/GitHub"
-                    className="w-9 h-9 rounded-[10px] border border-[var(--aba-border)] flex items-center justify-center text-[var(--aba-text-muted)] hover:text-[var(--aba-text)] hover:bg-[var(--aba-card-hover)] transition-all cursor-pointer shrink-0"
-                  >
-                    <RotateCcw size={13} />
-                  </button>
-                )}
+                <div className="w-9 h-9 rounded-[8px] bg-[var(--aba-accent-muted-bg)] border border-[var(--aba-accent-muted-border)] flex items-center justify-center shrink-0">
+                  {subiendoFoto
+                    ? <div className="w-4 h-4 border-2 border-[#3B82F6] border-t-transparent rounded-full aba-spin" />
+                    : <ImagePlus size={16} className="text-[var(--aba-accent-text)]" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] text-[var(--aba-text)]">Arrastrá una imagen acá, o hacé clic para elegirla</p>
+                  <p className="text-[11px] text-[var(--aba-text-disabled)] mt-0.5">PNG, JPG, WEBP o GIF · máx 5 MB · solo en este navegador, nunca se sube a ningún servidor</p>
+                </div>
               </div>
-              <p className="text-[11px] text-[var(--aba-text-disabled)] mt-1.5">
-                Pegá el link a una imagen. Dejalo vacío para volver a usar tu foto de {user.proveedor === 'GOOGLE' ? 'Google' : 'GitHub'}.
-              </p>
+              {avatarLocalUrl && (
+                <button
+                  type="button"
+                  onClick={quitarFoto}
+                  className="mt-2 flex items-center gap-1.5 text-[12px] text-[#F87171] hover:text-[#FCA5A5] transition-colors cursor-pointer"
+                >
+                  <Trash2 size={12} />
+                  Quitar foto local
+                </button>
+              )}
             </div>
 
             {errorGuardar && <p className="text-[12px] text-[#F87171]">{errorGuardar}</p>}

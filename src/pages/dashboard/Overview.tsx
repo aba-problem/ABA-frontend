@@ -32,19 +32,32 @@ import {
 const OVERVIEW_TOUR = [
   {
     title: '¡Bienvenido a ABA!',
-    body: 'Soy tu guía por la plataforma. Te voy a ir mostrando cómo funciona cada sección la primera vez que entrás — después me encontrás con este mismo botón, abajo a la derecha, en cualquier vista.',
+    body: 'Soy tu guía por la plataforma. Te voy a ir marcando cada opción, una por una, la primera vez que entrás a cada vista — después me encontrás con este mismo botón, abajo a la derecha, en cualquier momento.',
+    tipo: 'info' as const,
   },
   {
     title: 'Tu resumen',
-    body: 'Acá arriba ves cuántas bases de datos tenés, cuántas están activas, y cuánto espacio estás usando contra tu cuota máxima.',
+    body: 'Cuántas bases de datos tenés, cuántas están activas, y cuánto espacio estás usando contra tu cuota máxima.',
+    selector: '[data-tour="overview-stats"]',
+    tipo: 'estado' as const,
+  },
+  {
+    title: 'Crear una base nueva',
+    body: 'Un clic y te lleva al asistente de creación — el nombre, usuario y contraseña se generan solos.',
+    selector: '[data-tour="overview-crear"]',
+    tipo: 'crear' as const,
   },
   {
     title: 'Tus bases de datos',
-    body: 'Un vistazo rápido a tus bases más recientes. Hacé clic en cualquiera para ver sus credenciales y detalles, o usá "+ Crear nueva" para aprovisionar una.',
+    body: 'Un vistazo rápido a las más recientes. Hacé clic en cualquiera para ver sus credenciales y detalles.',
+    selector: '[data-tour="overview-databases"]',
+    tipo: 'info' as const,
   },
   {
     title: 'El resto de la plataforma',
-    body: 'En el menú de la izquierda tenés Automatización N8N, IA como Servicio y Subdominios DNS — cada uno con su propia explicación la primera vez que entrés. Y en Configuración (abajo del menú) podés ver tu perfil, apariencia y tus registros de sesión.',
+    body: 'Automatización N8N, IA como Servicio, Subdominios DNS y el Diagramador — cada uno tiene su propia explicación la primera vez que entrás.',
+    selector: '[data-tour="sidebar-diagramador"]',
+    tipo: 'info' as const,
   },
 ]
 
@@ -116,29 +129,32 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats row */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
-        </div>
-      ) : error ? (
-        <div className="rounded-[14px] border border-[#7F1D1D] bg-[#2A1010] p-5">
-          <p className="text-[14px] text-[#F87171]">{error}</p>
-          <p className="text-[12px] text-[#71717A] mt-1">Intenta recargar la página en unos segundos.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Database} label="Bases totales" value={databases.length} color="#3B82F6" />
-          <StatCard icon={Activity} label="Activas" value={activeDbs.length} color="#22C55E" />
-          <StatCard icon={HardDrive} label="Uso actual" value={`${totalStorage.toFixed(1)} MB`} color="#A855F7" />
-          <StatCard icon={Clock} label="Cuota máxima" value={`${maxStorage} MB`} color="#EAB308" />
-        </div>
-      )}
+      <div data-tour="overview-stats">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : error ? (
+          <div className="rounded-[14px] border border-[#7F1D1D] bg-[#2A1010] p-5">
+            <p className="text-[14px] text-[#F87171]">{error}</p>
+            <p className="text-[12px] text-[#71717A] mt-1">Intenta recargar la página en unos segundos.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard icon={Database} label="Bases totales" value={databases.length} color="#3B82F6" />
+            <StatCard icon={Activity} label="Activas" value={activeDbs.length} color="#22C55E" />
+            <StatCard icon={HardDrive} label="Uso actual" value={`${totalStorage.toFixed(1)} MB`} color="#A855F7" />
+            <StatCard icon={Clock} label="Cuota máxima" value={`${maxStorage} MB`} color="#EAB308" />
+          </div>
+        )}
+      </div>
 
       {/* Recent databases */}
-      <div>
+      <div data-tour="overview-databases">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-semibold text-[#F5F5F5]">Tus bases de datos</h2>
           <button
+            data-tour="overview-crear"
             onClick={() => navigate('/dashboard/new')}
             className="text-[13px] text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
           >

@@ -8,8 +8,8 @@
  * resultado como PNG. No genera SQL real ni toca ningún SP — es solo visual.
  *
  * Alcance deliberadamente acotado (v1): sin undo/redo, sin persistencia en
- * backend (se autoguarda en localStorage), sin zoom — mover/crear/conectar/
- * borrar y exportar es todo lo que hace, a propósito.
+ * backend (se autoguarda en localStorage) — mover/crear/conectar/borrar/
+ * redimensionar/exportar-e-importar es todo lo que hace, a propósito.
  *
  * Arquitectura: tablas como <div> con posición absoluta dentro de un lienzo
  * con position:relative; drag con pointer events nativos actualizando x/y en
@@ -21,11 +21,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { toPng } from 'html-to-image'
+import { toBlob } from 'html-to-image'
 import { MascotHelpButton } from '../../components/MascotGuide'
 import { Badge } from '../../ds/Badge'
 import {
-  ArrowLeft, Table2, Trash2, KeyRound, Link2, X, Download, Plus, Eraser, Network, GripVertical,
+  ArrowLeft, Table2, Trash2, KeyRound, Link2, X, Download, Upload, Plus, Eraser, Network, GripVertical,
 } from 'lucide-react'
 
 // ─── Modelo de datos ────────────────────────────────────────────────────────
@@ -49,8 +49,19 @@ interface TablaDiagrama {
   nombre: string
   x: number
   y: number
+  ancho: number
   color: string
   columnas: ColumnaDiagrama[]
+}
+
+interface TablaDiagramaJson {
+  id?: string
+  nombre?: string
+  x?: number
+  y?: number
+  ancho?: number
+  color?: string
+  columnas?: { id?: string; nombre?: string; tipo?: string; esPrimaryKey?: boolean; esForeignKey?: boolean }[]
 }
 
 interface RelacionDiagrama {
@@ -90,12 +101,14 @@ function colorAleatorio(): string {
 }
 
 const TABLE_WIDTH = 210
+const TABLE_MIN_WIDTH = 160
 const HEADER_HEIGHT = 38
 const ROW_HEIGHT = 28
 const FOOTER_HEIGHT = 26
 const CANVAS_WIDTH = 2600
 const CANVAS_HEIGHT = 1600
 const STORAGE_KEY = 'aba-diagrama-actual'
+const ZOOMS = [25, 50, 75, 100] as const
 
 function generarId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID
@@ -111,14 +124,41 @@ const DIAGRAMADOR_TOUR = [
   {
     title: 'Diagramá antes de crear',
     body: 'Armá la estructura de tu base — tablas, columnas y relaciones — antes (o después) de aprovisionarla de verdad. Es puramente visual: no genera SQL ni toca ninguna base real.',
+    tipo: 'info' as const,
+  },
+  {
+    title: 'Nueva tabla',
+    body: 'Cada tabla nace con un color aleatorio y una columna "id" — la clave primaria, fija.',
+    selector: '[data-tour="diagrama-nueva-tabla"]',
+    tipo: 'crear' as const,
+  },
+  {
+    title: 'La primera columna es siempre la clave',
+    body: '"id" nace como Primary Key y no se puede desmarcar — así ninguna tabla se queda sin identificador. El resto de las columnas sí podés marcarlas como Foreign Key, a mano o automáticamente al conectar dos tablas.',
+    tipo: 'estado' as const,
   },
   {
     title: 'Conectá arrastrando',
-    body: 'Cada columna tiene un puntito a la derecha. Arrastrá desde ahí hasta otra columna (de otra tabla) para crear una relación. Hacé clic en la etiqueta de la línea para cambiar el tipo (1-1, 1-N, N-N), o en la "x" para borrarla.',
+    body: 'Cada columna tiene un puntito a la derecha. Arrastrá desde ahí hasta otra columna (de otra tabla) para crear una relación — la columna de destino se marca FK sola. Hacé clic en la etiqueta de la línea para cambiar el tipo (1-1, 1-N, N-N), o en la "x" para borrarla.',
+    tipo: 'editar' as const,
   },
   {
-    title: 'Se guarda solo, exportá cuando quieras',
-    body: 'Tu diagrama se autoguarda en este navegador (no en el servidor) — si cerrás y volvés, seguís donde quedaste. Con "Descargar PNG" te llevás una imagen lista para compartir.',
+    title: 'Redimensioná y hacé zoom',
+    body: 'Arrastrá el borde derecho de cualquier tabla para agrandarla o achicarla. Con estos botones alejás o acercás la vista completa.',
+    selector: '[data-tour="diagrama-zoom"]',
+    tipo: 'editar' as const,
+  },
+  {
+    title: 'Limpiar todo',
+    body: 'Borra todas las tablas y relaciones de una — pide confirmación porque no se puede deshacer.',
+    selector: '[data-tour="diagrama-limpiar"]',
+    tipo: 'eliminar' as const,
+  },
+  {
+    title: 'Exportar, importar y descargar',
+    body: 'Tu diagrama se autoguarda en este navegador. "Exportar/Importar JSON" te deja llevar el modelo a otra sesión o compartirlo; "Descargar PNG" te da una imagen lista para compartir.',
+    selector: '[data-tour="diagrama-exportar-png"]',
+    tipo: 'info' as const,
   },
 ]
 
@@ -132,6 +172,8 @@ export default function DiagramEditorPage() {
   const [exportando, setExportando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cargado, setCargado] = useState(false)
+  const [zoom, setZoom] = useState<typeof ZOOMS[number]>(100)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const conectandoRef = useRef<ConexionEnProgreso | null>(null)
   const setConectando = useCallback((v: ConexionEnProgreso | null) => {
@@ -184,6 +226,7 @@ export default function DiagramEditorPage() {
         nombre: `Tabla_${prev.length + 1}`,
         x: 60 + col * 260,
         y: 60 + fila * 220,
+        ancho: TABLE_WIDTH,
         color: colorAleatorio(),
         columnas: [{ id: generarId(), nombre: 'id', tipo: 'INT', esPrimaryKey: true, esForeignKey: false }],
       }
@@ -230,12 +273,9 @@ export default function DiagramEditorPage() {
       : t)))
   }, [])
 
-  const togglePk = useCallback((tablaId: string, columnaId: string) => {
-    setTablas(prev => prev.map(t => (t.id === tablaId
-      ? { ...t, columnas: t.columnas.map(c => (c.id === columnaId ? { ...c, esPrimaryKey: !c.esPrimaryKey } : c)) }
-      : t)))
-  }, [])
-
+  // La Primary Key ya NO es editable a mano — "id" nace marcada y queda así
+  // siempre. Evita el estado inválido de una tabla sin ninguna PK, y saca
+  // ambigüedad: la clave es estructural, no una opción que se pueda apagar.
   const toggleFk = useCallback((tablaId: string, columnaId: string) => {
     setTablas(prev => prev.map(t => (t.id === tablaId
       ? { ...t, columnas: t.columnas.map(c => (c.id === columnaId ? { ...c, esForeignKey: !c.esForeignKey } : c)) }
@@ -276,11 +316,38 @@ export default function DiagramEditorPage() {
     window.addEventListener('pointerup', onSoltarTabla)
   }, [puntoEnCanvas, onArrastrarTabla, onSoltarTabla])
 
+  // ─── Redimensionado de tablas (solo ancho) ─────────────────────────────────
+
+  const resizeRef = useRef<{ tablaId: string; startX: number; anchoInicial: number } | null>(null)
+
+  const onRedimensionar = useCallback((e: PointerEvent) => {
+    const estado = resizeRef.current
+    if (!estado) return
+    const delta = e.clientX - estado.startX
+    setTablas(prev => prev.map(t => (t.id === estado.tablaId
+      ? { ...t, ancho: Math.max(TABLE_MIN_WIDTH, estado.anchoInicial + delta) }
+      : t)))
+  }, [])
+
+  const onSoltarRedimension = useCallback(() => {
+    resizeRef.current = null
+    window.removeEventListener('pointermove', onRedimensionar)
+    window.removeEventListener('pointerup', onSoltarRedimension)
+  }, [onRedimensionar])
+
+  const iniciarRedimension = useCallback((e: React.PointerEvent, tabla: TablaDiagrama) => {
+    e.preventDefault()
+    e.stopPropagation()
+    resizeRef.current = { tablaId: tabla.id, startX: e.clientX, anchoInicial: tabla.ancho }
+    window.addEventListener('pointermove', onRedimensionar)
+    window.addEventListener('pointerup', onSoltarRedimension)
+  }, [onRedimensionar, onSoltarRedimension])
+
   // ─── Relaciones ────────────────────────────────────────────────────────────
 
   function anclaColumna(tabla: TablaDiagrama, indice: number, lado: 'left' | 'right') {
     return {
-      x: lado === 'right' ? tabla.x + TABLE_WIDTH : tabla.x,
+      x: lado === 'right' ? tabla.x + tabla.ancho : tabla.x,
       y: tabla.y + HEADER_HEIGHT + indice * ROW_HEIGHT + ROW_HEIGHT / 2,
     }
   }
@@ -292,8 +359,8 @@ export default function DiagramEditorPage() {
     const idxO = tablaO.columnas.findIndex(c => c.id === r.columnaOrigenId)
     const idxD = tablaD.columnas.findIndex(c => c.id === r.columnaDestinoId)
     if (idxO === -1 || idxD === -1) return null
-    const centroO = tablaO.x + TABLE_WIDTH / 2
-    const centroD = tablaD.x + TABLE_WIDTH / 2
+    const centroO = tablaO.x + tablaO.ancho / 2
+    const centroD = tablaD.x + tablaD.ancho / 2
     const ladoO: 'left' | 'right' = centroD > centroO ? 'right' : 'left'
     const ladoD: 'left' | 'right' = centroD > centroO ? 'left' : 'right'
     const p1 = anclaColumna(tablaO, idxO, ladoO)
@@ -321,6 +388,13 @@ export default function DiagramEditorPage() {
     const tablaDestinoId = fila.dataset.tablaId!
     const columnaDestinoId = fila.dataset.columnaId!
     if (tablaDestinoId === origen.tablaId && columnaDestinoId === origen.columnaId) return // no auto-conexión a sí misma
+
+    // Más claro con las FK: la columna del lado "destino" de la conexión se marca
+    // Foreign Key automáticamente — no depende de que el usuario se acuerde de
+    // tocar el ícono a mano después de conectar.
+    setTablas(prev => prev.map(t => (t.id === tablaDestinoId
+      ? { ...t, columnas: t.columnas.map(c => (c.id === columnaDestinoId ? { ...c, esForeignKey: true } : c)) }
+      : t)))
 
     setRelaciones(prev => {
       const yaExiste = prev.some(r =>
@@ -371,26 +445,106 @@ export default function DiagramEditorPage() {
       const PAD = 40
       const minX = Math.max(0, Math.min(...tablas.map(t => t.x)) - PAD)
       const minY = Math.max(0, Math.min(...tablas.map(t => t.y)) - PAD)
-      const maxX = Math.max(...tablas.map(t => t.x + TABLE_WIDTH)) + PAD
+      const maxX = Math.max(...tablas.map(t => t.x + t.ancho)) + PAD
       const maxY = Math.max(...tablas.map(t => t.y + alturaTabla(t))) + PAD
 
-      const dataUrl = await toPng(canvasRef.current, {
+      // toBlob (no toPng/data-URI) — algunos navegadores (Safari en particular) no
+      // disparan la descarga de un <a download> con un href data: gigante, o lo abren
+      // en una pestaña nueva en vez de guardarlo. Un blob: URL es mucho más confiable
+      // para forzar la descarga real en todos los navegadores modernos.
+      const blob = await toBlob(canvasRef.current, {
         backgroundColor: '#09090B',
         pixelRatio: 2,
         width: maxX - minX,
         height: maxY - minY,
         style: { transform: `translate(${-minX}px, ${-minY}px)`, transformOrigin: 'top left' },
       })
+      if (!blob) throw new Error('toBlob devolvió null')
+
+      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.download = `diagrama-${Date.now()}.png`
-      link.href = dataUrl
+      link.href = blobUrl
+      // Algunos navegadores solo disparan el click sintético si el elemento está
+      // realmente en el DOM — se agrega y se saca enseguida, no queda visible.
+      document.body.appendChild(link)
       link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000)
     } catch {
-      setError('No se pudo generar la imagen. Intenta de nuevo.')
+      setError('No se pudo generar la imagen. Revisa que tu navegador permita descargas y volvé a intentar.')
     } finally {
       setExportando(false)
     }
   }, [tablas])
+
+  // ─── Exportar / importar modelo (JSON) ──────────────────────────────────
+
+  const exportarJson = useCallback(() => {
+    if (tablas.length === 0) return
+    const payload = JSON.stringify({ tablas, relaciones }, null, 2)
+    const blob = new Blob([payload], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.download = `diagrama-${Date.now()}.json`
+    link.href = url
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }, [tablas, relaciones])
+
+  const abrirSelectorImportar = useCallback(() => fileInputRef.current?.click(), [])
+
+  const onImportarArchivo = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite volver a importar el mismo archivo dos veces seguidas
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const datos = JSON.parse(String(reader.result)) as { tablas?: TablaDiagramaJson[]; relaciones?: RelacionDiagrama[] }
+        if (!Array.isArray(datos.tablas)) throw new Error('Formato inválido')
+
+        // Sanea campos por si el JSON viene de una versión vieja del editor (sin
+        // "ancho", por ejemplo) o fue editado a mano — nunca confía ciegamente
+        // en un archivo externo.
+        const idsValidos = new Set<string>()
+        const tablasSaneadas: TablaDiagrama[] = datos.tablas.map(t => {
+          const id = typeof t.id === 'string' ? t.id : generarId()
+          idsValidos.add(id)
+          return {
+            id,
+            nombre: typeof t.nombre === 'string' && t.nombre ? t.nombre : 'Tabla',
+            x: Number.isFinite(t.x) ? Number(t.x) : 0,
+            y: Number.isFinite(t.y) ? Number(t.y) : 0,
+            ancho: Number.isFinite(t.ancho) ? Math.max(TABLE_MIN_WIDTH, Number(t.ancho)) : TABLE_WIDTH,
+            color: typeof t.color === 'string' ? t.color : colorAleatorio(),
+            columnas: Array.isArray(t.columnas) ? t.columnas.map(c => ({
+              id: typeof c.id === 'string' ? c.id : generarId(),
+              nombre: typeof c.nombre === 'string' && c.nombre ? c.nombre : 'columna',
+              tipo: (TIPOS as string[]).includes(c.tipo ?? '') ? (c.tipo as TipoColumna) : 'VARCHAR',
+              esPrimaryKey: Boolean(c.esPrimaryKey),
+              esForeignKey: Boolean(c.esForeignKey),
+            })) : [],
+          }
+        })
+
+        const relacionesSaneadas: RelacionDiagrama[] = Array.isArray(datos.relaciones)
+          ? datos.relaciones.filter(r =>
+              r && idsValidos.has(r.tablaOrigenId) && idsValidos.has(r.tablaDestinoId))
+          : []
+
+        setTablas(tablasSaneadas)
+        setRelaciones(relacionesSaneadas)
+        setError(null)
+      } catch {
+        setError('El archivo no es un diagrama válido de ABA (JSON exportado desde acá).')
+      }
+    }
+    reader.readAsText(file)
+  }, [])
 
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-4">
@@ -416,10 +570,13 @@ export default function DiagramEditorPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button onClick={nuevaTabla} icon={<Plus size={13} />} label="Nueva tabla" primary />
-          <Button onClick={limpiarTodo} icon={<Eraser size={13} />} label="Limpiar todo" />
-          <Button onClick={descargarComoPng} icon={<Download size={13} />} label="Descargar PNG" loading={exportando} disabled={tablas.length === 0} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button dataTour="diagrama-nueva-tabla" onClick={nuevaTabla} icon={<Plus size={13} />} label="Nueva tabla" primary />
+          <Button dataTour="diagrama-limpiar" onClick={limpiarTodo} icon={<Eraser size={13} />} label="Limpiar todo" />
+          <Button onClick={exportarJson} icon={<Download size={13} />} label="Exportar JSON" disabled={tablas.length === 0} />
+          <Button onClick={abrirSelectorImportar} icon={<Upload size={13} />} label="Importar JSON" />
+          <input ref={fileInputRef} type="file" accept="application/json" onChange={onImportarArchivo} className="hidden" />
+          <Button dataTour="diagrama-exportar-png" onClick={descargarComoPng} icon={<Download size={13} />} label="Descargar PNG" loading={exportando} disabled={tablas.length === 0} />
         </div>
       </div>
 
@@ -429,11 +586,28 @@ export default function DiagramEditorPage() {
         </div>
       )}
 
+      <div className="flex items-center justify-end gap-1.5">
+        <span className="text-[11px] text-[#52525B] mr-1">Zoom</span>
+        <div data-tour="diagrama-zoom" className="flex items-center gap-0.5 border border-[#2B2D31] rounded-[10px] p-0.5 bg-[#18181B]">
+          {ZOOMS.map(z => (
+            <button
+              key={z}
+              onClick={() => setZoom(z)}
+              className={`h-7 px-2.5 rounded-[7px] text-[11.5px] font-medium transition-all cursor-pointer ${
+                zoom === z ? 'bg-[#3B82F6] text-white' : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1C1C1F]'
+              }`}
+            >
+              {z}%
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="relative rounded-[14px] border border-[#2B2D31] overflow-hidden">
         <div className="h-[620px] overflow-auto bg-[#09090B]">
           <div
             ref={canvasRef}
-            style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
+            style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
             className="relative"
           >
             <svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT} className="absolute inset-0 pointer-events-none">
@@ -495,12 +669,12 @@ export default function DiagramEditorPage() {
                 key={tabla.id}
                 tabla={tabla}
                 onDragStart={iniciarArrastreTabla}
+                onResizeStart={iniciarRedimension}
                 onRename={renombrarTabla}
                 onDelete={eliminarTabla}
                 onAddColumn={agregarColumna}
                 onRenameColumn={renombrarColumna}
                 onChangeTipo={cambiarTipoColumna}
-                onTogglePk={togglePk}
                 onToggleFk={toggleFk}
                 onDeleteColumn={eliminarColumna}
                 onStartConnection={iniciarConexion}
@@ -527,16 +701,18 @@ export default function DiagramEditorPage() {
 
 // ─── Botón de la barra de herramientas ──────────────────────────────────────
 
-function Button({ onClick, icon, label, primary, loading, disabled }: {
+function Button({ onClick, icon, label, primary, loading, disabled, dataTour }: {
   onClick: () => void
   icon: React.ReactNode
   label: string
   primary?: boolean
   loading?: boolean
   disabled?: boolean
+  dataTour?: string
 }) {
   return (
     <button
+      data-tour={dataTour}
       onClick={onClick}
       disabled={disabled || loading}
       className={`inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[10px] text-[13px] font-medium transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
@@ -554,23 +730,23 @@ function Button({ onClick, icon, label, primary, loading, disabled }: {
 // ─── Caja de tabla ──────────────────────────────────────────────────────────
 
 function TablaBox({
-  tabla, onDragStart, onRename, onDelete, onAddColumn, onRenameColumn, onChangeTipo, onTogglePk, onToggleFk, onDeleteColumn, onStartConnection,
+  tabla, onDragStart, onResizeStart, onRename, onDelete, onAddColumn, onRenameColumn, onChangeTipo, onToggleFk, onDeleteColumn, onStartConnection,
 }: {
   tabla: TablaDiagrama
   onDragStart: (e: React.PointerEvent, tabla: TablaDiagrama) => void
+  onResizeStart: (e: React.PointerEvent, tabla: TablaDiagrama) => void
   onRename: (tablaId: string, nombre: string) => void
   onDelete: (tablaId: string) => void
   onAddColumn: (tablaId: string) => void
   onRenameColumn: (tablaId: string, columnaId: string, nombre: string) => void
   onChangeTipo: (tablaId: string, columnaId: string, tipo: TipoColumna) => void
-  onTogglePk: (tablaId: string, columnaId: string) => void
   onToggleFk: (tablaId: string, columnaId: string) => void
   onDeleteColumn: (tablaId: string, columnaId: string) => void
   onStartConnection: (e: React.PointerEvent, tabla: TablaDiagrama, columna: ColumnaDiagrama, indice: number) => void
 }) {
   return (
     <div
-      style={{ left: tabla.x, top: tabla.y, width: TABLE_WIDTH, borderLeft: `3px solid ${tabla.color}` }}
+      style={{ left: tabla.x, top: tabla.y, width: tabla.ancho, borderLeft: `3px solid ${tabla.color}` }}
       className="absolute rounded-[10px] border-y border-r border-[#2B2D31] bg-[#18181B] shadow-[0_8px_24px_rgba(0,0,0,0.4)] select-none"
     >
       <div
@@ -604,22 +780,21 @@ function TablaBox({
             key={c.id}
             data-tabla-id={tabla.id}
             data-columna-id={c.id}
-            style={{ height: ROW_HEIGHT }}
+            style={{ height: ROW_HEIGHT, backgroundColor: c.esForeignKey ? 'rgba(59,130,246,0.10)' : undefined }}
             className="flex items-center gap-1 px-2 border-b border-[#2B2D31] last:border-0 text-[11px]"
           >
-            <button
-              onClick={() => onTogglePk(tabla.id, c.id)}
-              title="Primary key"
-              className={`shrink-0 cursor-pointer ${c.esPrimaryKey ? 'text-[#EAB308]' : 'text-[#3F3F46] hover:text-[#71717A]'}`}
-            >
+            {/* PK ya no es editable: nace en "id" y no se puede tocar — evita el
+                estado inválido de una tabla sin ninguna clave. Solo informativo. */}
+            <span title={c.esPrimaryKey ? 'Primary key' : undefined} className={`shrink-0 ${c.esPrimaryKey ? 'text-[#EAB308]' : 'text-[#27272A]'}`}>
               <KeyRound size={11} />
-            </button>
+            </span>
             <button
               onClick={() => onToggleFk(tabla.id, c.id)}
-              title="Foreign key"
-              className={`shrink-0 cursor-pointer ${c.esForeignKey ? 'text-[#3B82F6]' : 'text-[#3F3F46] hover:text-[#71717A]'}`}
+              title={c.esForeignKey ? 'Es Foreign Key — clic para quitar' : 'Marcar como Foreign Key'}
+              className={`shrink-0 flex items-center gap-0.5 cursor-pointer ${c.esForeignKey ? 'text-[#3B82F6]' : 'text-[#3F3F46] hover:text-[#71717A]'}`}
             >
               <Link2 size={11} />
+              {c.esForeignKey && <span className="text-[8.5px] font-bold leading-none">FK</span>}
             </button>
             <input
               value={c.nombre}
@@ -656,6 +831,13 @@ function TablaBox({
       >
         + columna
       </button>
+
+      {/* Redimensionado — solo ancho, arrastrando el borde derecho. */}
+      <div
+        onPointerDown={e => onResizeStart(e, tabla)}
+        className="absolute top-0 bottom-0 -right-1 w-2 cursor-ew-resize hover:bg-[#3B82F6]/25 transition-colors"
+        title="Arrastrá para cambiar el ancho de la tabla"
+      />
     </div>
   )
 }

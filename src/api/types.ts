@@ -223,7 +223,7 @@ export interface Usuario {
 export interface N8nWorkspace {
   /** Workspace ID. */
   id: number
-  /** Auto-generated workspace name. */
+  /** The user's email — their real identity on the Snapshot n8n provider. */
   nombreWorkspace: string
   /** Maximum number of workflows allowed. */
   limiteWorkflows: number
@@ -238,16 +238,17 @@ export interface N8nWorkspace {
 /**
  * Result of a successful N8N workspace creation.
  *
- * Mirrors `N8nWorkspaceCreadoDto.cs`. `passwordTemporal` is returned ONLY
- * once — it cannot be retrieved again, so it must be shown immediately.
+ * Mirrors `N8nWorkspaceCreadoDto.cs`. `credencialUrl` is a one-time n8n invite link
+ * (Snapshot doesn't support setting a password via API) — returned ONLY once, it
+ * cannot be retrieved again, so it must be shown/copied immediately.
  */
 export interface N8nWorkspaceCreado {
   /** Workspace ID. */
   id: number
-  /** Auto-generated workspace name. */
+  /** The user's email — their real identity on the Snapshot n8n provider. */
   nombreWorkspace: string
-  /** One-time workspace password. */
-  passwordTemporal: string
+  /** One-time n8n invite link — the user opens it to set their own password. */
+  credencialUrl: string
   /** Maximum number of workflows allowed. */
   limiteWorkflows: number
   /** Monthly execution limit. */

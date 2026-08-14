@@ -39,15 +39,26 @@ import {
 const CELULAS_TOUR = [
   {
     title: 'Solo para administradores',
-    body: 'Acá das de alta equipos externos ("células socias") que consumen /partners/databases con su propia API key — es infraestructura administrativa, no algo que use un usuario normal.',
+    body: 'Acá das de alta equipos externos ("células socias") que consumen /partners/databases con su propia API key — infraestructura administrativa, no algo que use un usuario normal.',
+    tipo: 'info' as const,
   },
   {
     title: 'El prefijo es para siempre',
-    body: 'Aísla los nombres de bases/usuarios de esa célula del resto — evita colisiones entre equipos. No se puede cambiar después de crearla, así que elegilo con cuidado.',
+    body: 'Aísla los nombres de bases/usuarios de esa célula del resto — evita colisiones entre equipos. No se puede cambiar después de crearla.',
+    selector: '[data-tour="celulas-prefijo"]',
+    tipo: 'crear' as const,
   },
   {
-    title: 'La key se muestra una sola vez',
-    body: 'Al crear la célula o rotar su key, el valor completo aparece una única vez — entregalo por un canal cifrado, nunca copiado y pegado en un chat abierto. Si se filtró, rotala con el ícono de llave: la vieja deja de funcionar al instante.',
+    title: 'Rotar la key',
+    body: 'Si se filtró, rotala con este ícono — la vieja deja de funcionar al instante. La key nueva se muestra una sola vez, como al crear la célula.',
+    selector: '[data-tour="celulas-rotar"]',
+    tipo: 'editar' as const,
+  },
+  {
+    title: 'Desactivar una célula',
+    body: 'Le corta el acceso sin borrar su historial — se puede reactivar después.',
+    selector: '[data-tour="celulas-estado"]',
+    tipo: 'eliminar' as const,
   },
 ]
 
@@ -210,7 +221,7 @@ export default function CelulasSociasPage() {
               className={`${inputClass} w-full`}
             />
           </div>
-          <div>
+          <div data-tour="celulas-prefijo">
             <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
               Prefijo
               <Tooltip text="Un código corto que identifica a esta célula. Se usa para que sus bases de datos nunca choquen de nombre con las de otra célula. No se puede cambiar después de crear la célula." />
@@ -281,6 +292,7 @@ export default function CelulasSociasPage() {
                   ) : (
                     <>
                       <button
+                        data-tour="celulas-rotar"
                         onClick={() => setConfirmId(`rotar-${c.id}`)}
                         className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#71717A] hover:text-[#3B82F6] hover:bg-[#1E2D4A] transition-all cursor-pointer"
                         title="Rotar API key"
@@ -288,6 +300,7 @@ export default function CelulasSociasPage() {
                         <KeyRound size={13} />
                       </button>
                       <button
+                        data-tour="celulas-estado"
                         onClick={() => setConfirmId(`estado-${c.id}`)}
                         className={`w-7 h-7 rounded-[6px] flex items-center justify-center transition-all cursor-pointer ${
                           c.activo

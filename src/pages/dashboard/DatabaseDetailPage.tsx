@@ -38,15 +38,21 @@ import {
 const DATABASE_DETAIL_TOUR = [
   {
     title: 'El anillo de almacenamiento',
-    body: 'Muestra cuánto espacio usás contra tu cuota máxima. Abajo, la columna de "Actividad" te dice cuándo se creó y cuándo se usó por última vez.',
+    body: 'Cuánto espacio usás contra tu cuota máxima.',
+    selector: '[data-tour="dbdetail-storage"]',
+    tipo: 'estado' as const,
   },
   {
     title: 'Ver credenciales',
-    body: 'La contraseña no se muestra sola por seguridad — hacé clic en "Ver credenciales" para consultarla (hasta 5 veces por hora). El "connection string" de ahí es para pegar en tu código; para clientes gráficos como DBeaver usá los campos individuales.',
+    body: 'La contraseña no se muestra sola por seguridad — hacé clic acá para consultarla (hasta 5 veces por hora). El "connection string" es para pegar en tu código; para clientes gráficos como DBeaver usá los campos individuales.',
+    selector: '[data-tour="dbdetail-credenciales"]',
+    tipo: 'estado' as const,
   },
   {
     title: 'Eliminar base de datos',
     body: 'Es una acción irreversible — perdés el acceso y todo lo que tenga guardado. Pedimos confirmación antes de ejecutarla, por las dudas.',
+    selector: '[data-tour="dbdetail-eliminar"]',
+    tipo: 'eliminar' as const,
   },
 ]
 
@@ -267,7 +273,7 @@ export default function DatabaseDetailPage() {
             <InfoRow label="Usuario" value={db.usuarioBD} mono copyable />
           </div>
 
-          <div className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
+          <div data-tour="dbdetail-storage" className="rounded-[14px] border border-[#2B2D31] bg-[#18181B] p-5">
             <div className="flex items-center gap-2 mb-4">
               <HardDrive size={14} className="text-[#A855F7]" />
               <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Almacenamiento</h3>
@@ -321,6 +327,7 @@ export default function DatabaseDetailPage() {
               </div>
               {!cred && (
                 <Button
+                  data-tour="dbdetail-credenciales"
                   variant="secondary"
                   size="sm"
                   loading={credLoading}
@@ -425,6 +432,7 @@ export default function DatabaseDetailPage() {
             </p>
             {!showDeleteConfirm ? (
               <Button
+                data-tour="dbdetail-eliminar"
                 variant="danger"
                 size="sm"
                 onClick={() => setShowDeleteConfirm(true)}

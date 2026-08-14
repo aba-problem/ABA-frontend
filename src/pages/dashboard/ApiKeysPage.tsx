@@ -32,16 +32,28 @@ import {
 
 const APIKEYS_TOUR = [
   {
-    title: 'IA como Servicio',
-    body: 'Generá una key para que tus propios programas o scripts consuman IA en tu nombre, sin usar tu sesión de usuario.',
+    title: 'Crear API key',
+    body: 'Generá una key para que tus propios programas o scripts consuman IA en tu nombre, sin usar tu sesión de usuario. Se muestra completa una única vez — después ABA solo guarda un hash.',
+    selector: '[data-tour="apikeys-crear"]',
+    tipo: 'crear' as const,
   },
   {
-    title: 'Se muestra una vez, como todo secreto',
-    body: 'Al crearla vas a ver el valor completo una única vez — después ABA solo guarda un hash, no puede volver a mostrártela. Más abajo en esta página tenés un tutorial completo con ejemplo de código.',
+    title: 'Tutorial completo acá abajo',
+    body: 'Cómo usarla en tus llamadas, con ejemplo de código copiable y los límites reales del servicio.',
+    selector: '[data-tour="apikeys-tutorial"]',
+    tipo: 'info' as const,
   },
   {
     title: '¿Se filtró o la perdiste?',
-    body: 'Revocala con el ícono de basurero de la lista y creá una nueva — es instantáneo. También podés ver el consumo (llamadas y tokens) de cada key haciendo clic en "Consumo".',
+    body: 'Revocala con este ícono y creá una nueva — es instantáneo y no afecta tus otras keys activas.',
+    selector: '[data-tour="apikeys-revocar"]',
+    tipo: 'eliminar' as const,
+  },
+  {
+    title: 'Consumo por key',
+    body: 'Cuántas llamadas y tokens gastó cada key en los últimos 30 días.',
+    selector: '[data-tour="apikeys-consumo"]',
+    tipo: 'estado' as const,
   },
 ]
 
@@ -172,13 +184,13 @@ export default function ApiKeysPage() {
             </p>
           </div>
         </div>
-        <Button variant="primary" size="md" loading={creating} onClick={handleCreate} iconLeft={<KeyRound size={14} />}>
+        <Button data-tour="apikeys-crear" variant="primary" size="md" loading={creating} onClick={handleCreate} iconLeft={<KeyRound size={14} />}>
           Crear API key
         </Button>
       </div>
 
       {/* Tutorial breve — cómo generar, usar y recuperar el acceso si se pierde la key */}
-      <div className="rounded-[14px] border border-[#2B2D31] bg-[#111217] overflow-hidden">
+      <div data-tour="apikeys-tutorial" className="rounded-[14px] border border-[#2B2D31] bg-[#111217] overflow-hidden">
         <button
           onClick={() => setShowTutorial(s => !s)}
           className="w-full flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-[#18181B] transition-colors"
@@ -284,6 +296,7 @@ export default function ApiKeysPage() {
                       {key.activa ? 'Activa' : 'Revocada'}
                     </Badge>
                     <button
+                      data-tour="apikeys-consumo"
                       onClick={() => toggleConsumo(key.id)}
                       className="flex items-center gap-1 h-7 px-2.5 rounded-[6px] text-[11px] text-[#71717A] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-all cursor-pointer"
                     >
@@ -293,6 +306,7 @@ export default function ApiKeysPage() {
                     {key.activa && (
                       !confirmRevokeId || confirmRevokeId !== key.id ? (
                         <button
+                          data-tour="apikeys-revocar"
                           onClick={() => setConfirmRevokeId(key.id)}
                           className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#71717A] hover:text-[#EF4444] hover:bg-[#2A1010] transition-all cursor-pointer"
                           title="Revocar key"

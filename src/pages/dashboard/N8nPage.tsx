@@ -2,11 +2,17 @@
  * @module pages/dashboard/N8nPage
  * @description N8N workspace self-service — `/dashboard/n8n`.
  *
+ * Real n8n accounts, provisioned via the Snapshot external API (not a local
+ * placeholder). Snapshot doesn't support setting a password via API, so the
+ * one-time credential is an **invite link** the user opens to set their own
+ * password — not a password itself.
+ *
  * Manages the user's N8N workspace lifecycle:
  * - Empty state with "Create workspace" CTA when none exists
- * - Workspace details (name, limits, status, creation date)
- * - Create flow: one-time `passwordTemporal` modal with copy + warning
- * - Delete flow with inline confirmation
+ * - Workspace details (email, limits, status, creation date)
+ * - Create flow: one-time invite-link modal with copy/open + warning
+ * - Delete flow with inline confirmation — LOCAL only, see warning copy below
+ *   (Snapshot exposes no deprovisioning endpoint, so the real account survives)
  *
  * Rate limit: 1 creation per 10 minutes (backend enforced).
  *
@@ -26,21 +32,31 @@ import { Badge } from '../../ds/Badge'
 import { SkeletonCard } from '../../ds/Skeleton'
 import { MascotHelpButton } from '../../components/MascotGuide'
 import {
-  Workflow, ArrowLeft, Copy, Check, AlertTriangle, Trash2,
+  Workflow, ArrowLeft, Copy, Check, AlertTriangle, Trash2, ExternalLink,
 } from 'lucide-react'
 
 const N8N_TOUR = [
   {
     title: '¿Qué es esto?',
-    body: 'N8N es una herramienta de automatización — conectá servicios entre sí para que se ejecuten solos, sin que tengas que estar mirando. Acá te damos tu propio workspace.',
+    body: 'N8N es una herramienta de automatización — conectá servicios entre sí para que se ejecuten solos, sin que tengas que estar mirando. Esta es una cuenta real, no una simulación.',
+    tipo: 'info' as const,
   },
   {
-    title: 'Solo uno por usuario',
-    body: 'Cada cuenta tiene un único workspace activo. El nombre y la contraseña se generan automáticamente al crearlo — no hay nada que configurar a mano.',
+    title: 'Crear tu cuenta',
+    body: 'Solo una por cuenta de ABA, ligada a tu correo. Vas a recibir un enlace de invitación para definir tu propia contraseña.',
+    selector: '[data-tour="n8n-crear"]',
+    tipo: 'crear' as const,
   },
   {
-    title: 'Guardá la contraseña ya',
-    body: 'A diferencia de las bases de datos, acá no hay forma de volver a consultarla después — se muestra una única vez en el modal de creación. Si la perdés, tenés que eliminar el workspace y crear uno nuevo.',
+    title: 'Guardá el enlace ya',
+    body: 'El proveedor de N8N no permite fijar contraseña por API, así que la credencial es un enlace de invitación de un solo uso — se muestra una única vez en el modal de creación.',
+    tipo: 'estado' as const,
+  },
+  {
+    title: 'Eliminar workspace',
+    body: 'Solo borra el registro acá en ABA — el proveedor externo no tiene forma de borrar la cuenta real, así que sigue existiendo del otro lado.',
+    selector: '[data-tour="n8n-eliminar"]',
+    tipo: 'eliminar' as const,
   },
 ]
 
@@ -114,9 +130,9 @@ export default function N8nPage() {
     }
   }
 
-  const copyPassword = async () => {
+  const copyInviteLink = async () => {
     if (!created) return
-    await navigator.clipboard.writeText(created.passwordTemporal)
+    await navigator.clipboard.writeText(created.credencialUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -156,9 +172,9 @@ export default function N8nPage() {
           </div>
           <h3 className="text-[16px] font-semibold text-[#F5F5F5] mb-2">Aún no tienes un workspace N8N</h3>
           <p className="text-[14px] text-[#71717A] mb-6 max-w-sm mx-auto">
-            Crea tu workspace para empezar a automatizar. El nombre y la contraseña se generan automáticamente.
+            Crea tu cuenta real de N8N, ligada a tu correo. Vas a recibir un enlace de invitación para definir tu propia contraseña.
           </p>
-          <Button variant="primary" size="md" loading={creating} onClick={handleCreate}>
+          <Button data-tour="n8n-crear" variant="primary" size="md" loading={creating} onClick={handleCreate}>
             Crear workspace
           </Button>
           <div className="mt-6 flex items-center gap-2 justify-center text-[12px] text-[#71717A]">
@@ -176,7 +192,7 @@ export default function N8nPage() {
                 </div>
                 <div>
                   <p className="text-[15px] font-semibold text-[#F5F5F5] font-mono">{workspace.nombreWorkspace}</p>
-                  <p className="text-[11px] text-[#71717A]">Creado el {formatDate(workspace.fechaCreacion)}</p>
+                  <p className="text-[11px] text-[#71717A]">Cuenta real de N8N · creada el {formatDate(workspace.fechaCreacion)}</p>
                 </div>
               </div>
               <Badge variant={workspace.estado === 'ACTIVO' ? 'success' : 'default'} dot>
@@ -198,13 +214,18 @@ export default function N8nPage() {
           </div>
 
           {!confirmDelete ? (
-            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} iconLeft={<Trash2 size={13} />}>
+            <Button data-tour="n8n-eliminar" variant="danger" size="sm" onClick={() => setConfirmDelete(true)} iconLeft={<Trash2 size={13} />}>
               Eliminar workspace
             </Button>
           ) : (
             <div className="rounded-[10px] border border-[#7F1D1D] bg-[#2A1010] p-4 max-w-xl">
-              <p className="text-[13px] text-[#F87171] mb-3">
+              <p className="text-[13px] text-[#F87171] mb-2">
                 ¿Seguro que quieres eliminar tu workspace N8N? Esta acción no se puede deshacer.
+              </p>
+              <p className="text-[12px] text-[#FCA5A5] mb-3">
+                Ojo: esto solo borra el registro acá en ABA. El proveedor externo (Snapshot) no
+                tiene un endpoint para borrar la cuenta real — sigue existiendo del otro lado. Si
+                creás una nueva más adelante, es esperable que te diga que ya tenés una cuenta.
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="danger" size="sm" loading={deleting} onClick={handleDelete}>
@@ -219,7 +240,8 @@ export default function N8nPage() {
         </div>
       )}
 
-      {/* Created workspace modal — one-time password */}
+      {/* Created workspace modal — one-time invite link (not a password: Snapshot
+          doesn't support setting one via API, the user defines it after opening the link) */}
       <Modal
         open={showCreated}
         onClose={() => {
@@ -233,26 +255,43 @@ export default function N8nPage() {
             <div className="rounded-[10px] bg-[#2A2008] border border-[#422006] p-3 flex items-start gap-2">
               <AlertTriangle size={14} className="text-[#EAB308] shrink-0 mt-0.5" />
               <span className="text-[13px] text-[#FCD34D]">
-                Esta es la única vez que verás la contraseña. Cópiala ahora; no se podrá volver a consultar.
+                Esta es la única vez que verás el enlace de invitación. Guárdalo o ábrelo ahora; no se podrá volver a consultar.
               </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between py-2 border-b border-[#2B2D31]">
-                <span className="text-[12px] text-[#52525B] uppercase">Workspace</span>
-                <span className="text-[13px] font-mono text-[#A1A1AA]">{created.nombreWorkspace}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-[#2B2D31]">
-                <span className="text-[12px] text-[#52525B] uppercase">Contraseña</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-mono text-[#A1A1AA]">{created.passwordTemporal}</span>
+            <div className="rounded-[10px] border border-[#2B2D31] bg-[#09090B] p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-[#52525B] uppercase tracking-wider">Enlace de invitación</span>
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={copyPassword}
+                    onClick={copyInviteLink}
+                    title="Copiar enlace"
                     className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-[#18181B] transition-all cursor-pointer"
                   >
                     {copied ? <Check size={11} className="text-[#22C55E]" /> : <Copy size={11} />}
                   </button>
+                  <a
+                    href={created.credencialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Abrir enlace"
+                    className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-[#18181B] transition-all cursor-pointer"
+                  >
+                    <ExternalLink size={11} />
+                  </a>
                 </div>
+              </div>
+              <p className="text-[12px] font-mono text-[#A1A1AA] break-all">{created.credencialUrl}</p>
+            </div>
+
+            <p className="text-[12px] text-[#71717A]">
+              Al abrirlo vas a poder definir tu propia contraseña y entrar a tu espacio de trabajo.
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between py-2 border-b border-[#2B2D31]">
+                <span className="text-[12px] text-[#52525B] uppercase">Correo</span>
+                <span className="text-[13px] font-mono text-[#A1A1AA]">{created.nombreWorkspace}</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-[#2B2D31]">
                 <span className="text-[12px] text-[#52525B] uppercase">Workflows</span>

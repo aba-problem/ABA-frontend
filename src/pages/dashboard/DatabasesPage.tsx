@@ -27,16 +27,28 @@ import { Database, Search } from 'lucide-react'
 
 const DATABASES_TOUR = [
   {
-    title: 'Todas tus bases',
-    body: 'Acá están todas tus bases de datos, no solo las más recientes. Usá el buscador para filtrar por nombre, motor o servidor.',
+    title: 'Buscá entre todas tus bases',
+    body: 'No solo las más recientes — filtrá por nombre, motor o servidor.',
+    selector: '[data-tour="databases-search"]',
+    tipo: 'info' as const,
+  },
+  {
+    title: '+ Nueva base de datos',
+    body: 'Te lleva al asistente de creación — elegís el motor y listo.',
+    selector: '[data-tour="databases-crear"]',
+    tipo: 'crear' as const,
   },
   {
     title: 'El color del punto importa',
-    body: 'Verde es activa, amarillo es pausada por inactividad, rojo es un estado de error o cuota excedida. Hacé clic en cualquier tarjeta para ver el detalle completo.',
+    body: 'Verde es activa, amarillo es pausada por inactividad, rojo es un estado de error o cuota excedida.',
+    selector: '[data-tour="db-card-status"]',
+    tipo: 'estado' as const,
   },
   {
     title: 'La barra de espacio',
     body: 'Se pone roja cuando pasás el 80% de tu cuota — es tu aviso para limpiar datos antes de acercarte al límite máximo.',
+    selector: '[data-tour="db-card-storage"]',
+    tipo: 'estado' as const,
   },
 ]
 
@@ -77,6 +89,7 @@ export default function DatabasesPage() {
           <p className="text-[13px] text-[#71717A] mt-1">{databases.length} en total</p>
         </div>
         <button
+          data-tour="databases-crear"
           onClick={() => navigate('/dashboard/new')}
           className="inline-flex items-center gap-2 h-9 px-4 rounded-[10px] bg-[#3B82F6] text-[13px] font-medium text-white hover:bg-[#2563EB] transition-all cursor-pointer"
         >
@@ -85,7 +98,7 @@ export default function DatabasesPage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
+      <div data-tour="databases-search" className="relative max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#52525B]" />
         <input
           type="text"
@@ -139,9 +152,11 @@ export default function DatabasesPage() {
                     <p className="text-[11px] font-mono text-[#52525B]">{db.motor}</p>
                   </div>
                 </div>
-                <StatusDot
-                  variant={db.estado === 'ACTIVA' ? 'success' : db.estado === 'PAUSADA' ? 'warning' : 'danger'}
-                />
+                <span data-tour="db-card-status">
+                  <StatusDot
+                    variant={db.estado === 'ACTIVA' ? 'success' : db.estado === 'PAUSADA' ? 'warning' : 'danger'}
+                  />
+                </span>
               </div>
 
               <div className="space-y-2 text-[12px]">
@@ -157,7 +172,7 @@ export default function DatabasesPage() {
                   <span className="text-[#52525B]">Espacio</span>
                   <span className="text-[#A1A1AA]">{db.espacioUtilizadoMB}/{db.espacioMaximoMB} MB</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#1F2024] overflow-hidden mt-1">
+                <div data-tour="db-card-storage" className="h-1.5 rounded-full bg-[#1F2024] overflow-hidden mt-1">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{

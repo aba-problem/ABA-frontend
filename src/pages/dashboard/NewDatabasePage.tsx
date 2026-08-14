@@ -34,14 +34,19 @@ const NEW_DATABASE_TOUR = [
   {
     title: 'Elegí un motor',
     body: 'MySQL y SQL Server están disponibles para crear ahora mismo. MongoDB está marcado "Pronto" — todavía no, un tema pendiente con el proveedor externo, no con ABA.',
+    selector: '[data-tour="new-db-engines"]',
+    tipo: 'info' as const,
   },
   {
     title: 'Un clic y listo',
     body: 'No hay formularios que llenar: el nombre, usuario y contraseña se generan solos, seguros, del lado del servidor.',
+    selector: '[data-tour="new-db-crear"]',
+    tipo: 'crear' as const,
   },
   {
     title: 'La contraseña se muestra UNA vez',
     body: 'Cuando termine de crearse, vas a ver la contraseña completa en pantalla — copiala ahí mismo. Después solo la volvés a ver con "Ver credenciales" en el detalle de la base, y con un límite de 5 consultas por hora.',
+    tipo: 'estado' as const,
   },
 ]
 
@@ -129,7 +134,7 @@ export default function NewDatabasePage() {
       </div>
 
       {/* Engine selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div data-tour="new-db-engines" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {ENGINES.map(engine => (
           <button
             key={engine.value}
@@ -187,6 +192,7 @@ export default function NewDatabasePage() {
 
       <div className="flex gap-3">
         <Button
+          data-tour="new-db-crear"
           variant="primary"
           size="lg"
           loading={loading}

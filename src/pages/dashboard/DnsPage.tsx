@@ -35,15 +35,26 @@ import {
 const DNS_TOUR = [
   {
     title: 'Tu propio subdominio',
-    body: 'Elegí un nombre y se crea como "tu-nombre.aba.coderhivex.com". Es tuyo, no de ABA — sirve para apuntar a cualquier servicio que TÚ tengas corriendo en otro lado.',
+    body: 'Elegí un nombre acá y se crea como "tu-nombre.aba.coderhivex.com". Es tuyo, no de ABA.',
+    selector: '[data-tour="dns-subdominio"]',
+    tipo: 'crear' as const,
   },
   {
     title: 'El campo "Valor" es TU servidor',
-    body: 'No es la dirección de ABA — es la IP (tipo A) o el dominio (tipo CNAME) de donde vive lo que querés exponer. Si no tenés nada corriendo todavía, todavía no tiene sentido crear el registro.',
+    body: 'No es la dirección de ABA — es la IP (tipo A) o el dominio (tipo CNAME) de donde vive lo que querés exponer.',
+    selector: '[data-tour="dns-valor"]',
+    tipo: 'editar' as const,
   },
   {
     title: 'Propagación y límites',
-    body: 'Un registro cada 5 minutos, y tarda unos minutos en propagarse antes de que funcione. Podés eliminarlo cuando quieras con el ícono de basurero.',
+    body: 'Un registro cada 5 minutos, y tarda unos minutos en propagarse antes de que funcione.',
+    tipo: 'estado' as const,
+  },
+  {
+    title: 'Eliminar un registro',
+    body: 'Podés borrarlo cuando quieras con este ícono — es inmediato.',
+    selector: '[data-tour="dns-eliminar"]',
+    tipo: 'eliminar' as const,
   },
 ]
 
@@ -174,6 +185,7 @@ export default function DnsPage() {
         <span className="text-[11px] text-[#52525B] hidden sm:block">{formatDate(r.fechaCreacion)}</span>
         {!confirmDeleteId || confirmDeleteId !== key ? (
           <button
+            data-tour="dns-eliminar"
             onClick={() => setConfirmDeleteId(key)}
             className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#71717A] hover:text-[#EF4444] hover:bg-[#2A1010] transition-all cursor-pointer"
             title="Eliminar registro"
@@ -232,7 +244,7 @@ export default function DnsPage() {
           <h3 className="text-[14px] font-semibold text-[#F5F5F5]">Nuevo registro</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_110px_1fr_auto] gap-3">
-          <div>
+          <div data-tour="dns-subdominio">
             <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
               Subdominio
               <Tooltip text="El nombre que quieres usar antes de .aba.coderhivex.com — por ejemplo 'app' crea app.aba.coderhivex.com." />
@@ -264,7 +276,7 @@ export default function DnsPage() {
               <option value="CNAME">CNAME — apunta a otro dominio</option>
             </select>
           </div>
-          <div>
+          <div data-tour="dns-valor">
             <label className="flex items-center gap-1 text-[11px] text-[#52525B] uppercase tracking-wider mb-1.5">
               Valor
               <Tooltip text={tipoRegistro === 'A' ? 'La dirección IP del servidor al que quieres apuntar.' : 'El dominio al que quieres apuntar (sin http:// ni www).'} />
