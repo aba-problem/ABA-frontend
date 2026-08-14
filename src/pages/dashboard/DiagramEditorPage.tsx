@@ -5,11 +5,13 @@
  * Feature 100% client-side (sin dependencia del backend): el usuario crea
  * tablas, columnas y relaciones para planear la estructura de una base de
  * datos antes (o después) de crearla de verdad, y puede descargar el
- * resultado como PNG. No genera SQL real ni toca ningún SP — es solo visual.
+ * resultado como PNG o como script de creación (MySQL, SQL Server o
+ * MongoDB). El script es best-effort para revisar antes de ejecutar — no
+ * se corre ni se manda a ningún SP, es texto generado en el navegador.
  *
  * Alcance deliberadamente acotado (v1): sin undo/redo, sin persistencia en
  * backend (se autoguarda en localStorage) — mover/crear/conectar/borrar/
- * redimensionar/exportar-e-importar es todo lo que hace, a propósito.
+ * redimensionar/exportar-SQL/importar-JSON es todo lo que hace, a propósito.
  *
  * Arquitectura: tablas como <div> con posición absoluta dentro de un lienzo
  * con position:relative; drag con pointer events nativos actualizando x/y en
@@ -25,7 +27,7 @@ import { toBlob } from 'html-to-image'
 import { MascotHelpButton } from '../../components/MascotGuide'
 import { Badge } from '../../ds/Badge'
 import {
-  ArrowLeft, Table2, Trash2, KeyRound, Link2, X, Download, Upload, Plus, Eraser, Network, GripVertical,
+  ArrowLeft, Table2, Trash2, KeyRound, Link2, X, Download, Upload, Plus, Eraser, Network, GripVertical, FileCode2,
 } from 'lucide-react'
 
 // ─── Modelo de datos ────────────────────────────────────────────────────────
@@ -35,6 +37,7 @@ type TipoColumna =
   | 'DATE' | 'DATETIME' | 'TIMESTAMP' | 'TIME'
   | 'BOOLEAN' | 'DECIMAL' | 'FLOAT' | 'JSON' | 'UUID' | 'BLOB'
 type TipoRelacion = '1-1' | '1-N' | 'N-N'
+type MotorExportSql = 'mysql' | 'sqlserver' | 'mongo'
 
 interface ColumnaDiagrama {
   id: string
@@ -100,6 +103,155 @@ function colorAleatorio(): string {
   return PALETA_COLORES[Math.floor(Math.random() * PALETA_COLORES.length)]
 }
 
+// ─── Generación de scripts SQL / Mongo (best-effort) ────────────────────────
+// Traduce el modelo visual a un script de creación real. No es un motor SQL
+// completo: usa longitudes/precisión por defecto razonables y asume que el
+// usuario va a revisar el resultado antes de ejecutarlo — el diagrama no
+// valida cosas como nombres reservados o límites reales del motor destino.
+
+const TIPO_MYSQL: Record<TipoColumna, string> = {
+  INT: 'INT', BIGINT: 'BIGINT', SMALLINT: 'SMALLINT',
+  VARCHAR: 'VARCHAR(255)', CHAR: 'CHAR(10)', TEXT: 'TEXT',
+  DATE: 'DATE', DATETIME: 'DATETIME', TIMESTAMP: 'TIMESTAMP', TIME: 'TIME',
+  BOOLEAN: 'BOOLEAN', DECIMAL: 'DECIMAL(10,2)', FLOAT: 'FLOAT',
+  JSON: 'JSON', UUID: 'CHAR(36)', BLOB: 'BLOB',
+}
+
+const TIPO_SQLSERVER: Record<TipoColumna, string> = {
+  INT: 'INT', BIGINT: 'BIGINT', SMALLINT: 'SMALLINT',
+  VARCHAR: 'NVARCHAR(255)', CHAR: 'NCHAR(10)', TEXT: 'NVARCHAR(MAX)',
+  DATE: 'DATE', DATETIME: 'DATETIME2', TIMESTAMP: 'DATETIME2', TIME: 'TIME',
+  BOOLEAN: 'BIT', DECIMAL: 'DECIMAL(10,2)', FLOAT: 'FLOAT',
+  JSON: 'NVARCHAR(MAX)', UUID: 'UNIQUEIDENTIFIER', BLOB: 'VARBINARY(MAX)',
+}
+
+const TIPO_MONGO_BSON: Record<TipoColumna, string> = {
+  INT: 'int', BIGINT: 'long', SMALLINT: 'int',
+  VARCHAR: 'string', CHAR: 'string', TEXT: 'string',
+  DATE: 'date', DATETIME: 'date', TIMESTAMP: 'date', TIME: 'string',
+  BOOLEAN: 'bool', DECIMAL: 'decimal', FLOAT: 'double',
+  JSON: 'object', UUID: 'string', BLOB: 'binData',
+}
+
+function nombreValido(nombre: string, fallback: string): string {
+  return nombre.trim() || fallback
+}
+
+function generarSqlMySql(tablas: TablaDiagrama[], relaciones: RelacionDiagrama[]): string {
+  const lineas = [
+    '-- Generado por el Diagramador de ABA — revisá tipos, longitudes y constraints antes de ejecutar.',
+    '-- Motor: MySQL 8.0',
+    '',
+  ]
+  for (const t of tablas) {
+    const nombreTabla = nombreValido(t.nombre, 'tabla_sin_nombre')
+    const columnas = t.columnas.map(c => {
+      const tipo = TIPO_MYSQL[c.tipo]
+      const autoIncrement = c.esPrimaryKey && (c.tipo === 'INT' || c.tipo === 'BIGINT') ? ' AUTO_INCREMENT' : ''
+      const pk = c.esPrimaryKey ? ' PRIMARY KEY' : ''
+      return `  \`${nombreValido(c.nombre, 'columna')}\` ${tipo}${autoIncrement}${pk} NOT NULL`
+    })
+    const fks = relaciones
+      .filter(r => r.tablaDestinoId === t.id)
+      .map(r => {
+        const origen = tablas.find(o => o.id === r.tablaOrigenId)
+        const colDestino = t.columnas.find(c => c.id === r.columnaDestinoId)
+        const colOrigen = origen?.columnas.find(c => c.id === r.columnaOrigenId)
+        if (!origen || !colDestino || !colOrigen) return null
+        const comentario = r.tipo === 'N-N'
+          ? `  -- Relación N-N: considerá una tabla intermedia (join table) en vez de esta FK directa.\n`
+          : ''
+        return `${comentario}  FOREIGN KEY (\`${nombreValido(colDestino.nombre, 'columna')}\`) REFERENCES \`${nombreValido(origen.nombre, 'tabla_sin_nombre')}\` (\`${nombreValido(colOrigen.nombre, 'columna')}\`)`
+      })
+      .filter((x): x is string => x !== null)
+    lineas.push(`CREATE TABLE \`${nombreTabla}\` (`)
+    lineas.push([...columnas, ...fks].join(',\n'))
+    lineas.push(');', '')
+  }
+  return lineas.join('\n')
+}
+
+function generarSqlServer(tablas: TablaDiagrama[], relaciones: RelacionDiagrama[]): string {
+  const lineas = [
+    '-- Generado por el Diagramador de ABA — revisá tipos, longitudes y constraints antes de ejecutar.',
+    '-- Motor: SQL Server',
+    '-- Nota: el tipo "TIMESTAMP" del diagrama se mapea a DATETIME2 — el ROWVERSION real de',
+    '-- SQL Server no es una fecha, se autogenera y no se puede fijar a mano.',
+    '',
+  ]
+  for (const t of tablas) {
+    const nombreTabla = nombreValido(t.nombre, 'tabla_sin_nombre')
+    const columnas = t.columnas.map(c => {
+      const tipo = TIPO_SQLSERVER[c.tipo]
+      const identity = c.esPrimaryKey && (c.tipo === 'INT' || c.tipo === 'BIGINT') ? ' IDENTITY(1,1)' : ''
+      const pk = c.esPrimaryKey ? ' PRIMARY KEY' : ''
+      return `  [${nombreValido(c.nombre, 'columna')}] ${tipo}${identity}${pk} NOT NULL`
+    })
+    const fks = relaciones
+      .filter(r => r.tablaDestinoId === t.id)
+      .map(r => {
+        const origen = tablas.find(o => o.id === r.tablaOrigenId)
+        const colDestino = t.columnas.find(c => c.id === r.columnaDestinoId)
+        const colOrigen = origen?.columnas.find(c => c.id === r.columnaOrigenId)
+        if (!origen || !colDestino || !colOrigen) return null
+        const comentario = r.tipo === 'N-N'
+          ? `  -- Relación N-N: considerá una tabla intermedia (join table) en vez de esta FK directa.\n`
+          : ''
+        return `${comentario}  FOREIGN KEY ([${nombreValido(colDestino.nombre, 'columna')}]) REFERENCES [dbo].[${nombreValido(origen.nombre, 'tabla_sin_nombre')}] ([${nombreValido(colOrigen.nombre, 'columna')}])`
+      })
+      .filter((x): x is string => x !== null)
+    lineas.push(`CREATE TABLE [dbo].[${nombreTabla}] (`)
+    lineas.push([...columnas, ...fks].join(',\n'))
+    lineas.push(');', '')
+  }
+  return lineas.join('\n')
+}
+
+function generarScriptMongo(tablas: TablaDiagrama[], relaciones: RelacionDiagrama[]): string {
+  const lineas = [
+    '// Generado por el Diagramador de ABA — revisá tipos y validaciones antes de ejecutar en mongosh.',
+    '// MongoDB no tiene Foreign Keys reales: las relaciones se modelan como referencias',
+    '// (guardando el _id de un documento dentro de otro), quedan anotadas como comentario,',
+    '// no como una restricción que la base fuerce.',
+    '',
+  ]
+  for (const t of tablas) {
+    const nombreTabla = nombreValido(t.nombre, 'tabla_sin_nombre')
+    const campoMongo = (nombre: string) => (nombreValido(nombre, 'campo') === 'id' ? '_id' : nombreValido(nombre, 'campo'))
+    const requeridos = t.columnas.map(c => `"${campoMongo(c.nombre)}"`).join(', ')
+    const propiedades = t.columnas
+      .map(c => `        ${campoMongo(c.nombre)}: { bsonType: "${TIPO_MONGO_BSON[c.tipo]}" }`)
+      .join(',\n')
+
+    lineas.push(`db.createCollection("${nombreTabla}", {`)
+    lineas.push('  validator: {')
+    lineas.push('    $jsonSchema: {')
+    lineas.push('      bsonType: "object",')
+    lineas.push(`      required: [${requeridos}],`)
+    lineas.push('      properties: {')
+    lineas.push(propiedades)
+    lineas.push('      },')
+    lineas.push('    },')
+    lineas.push('  },')
+    lineas.push('});')
+
+    for (const r of relaciones.filter(rel => rel.tablaDestinoId === t.id)) {
+      const origen = tablas.find(o => o.id === r.tablaOrigenId)
+      const colDestino = t.columnas.find(c => c.id === r.columnaDestinoId)
+      if (!origen || !colDestino) continue
+      lineas.push(`// Relación (${r.tipo}): "${campoMongo(colDestino.nombre)}" en "${nombreTabla}" referencia un documento de "${nombreValido(origen.nombre, 'tabla_sin_nombre')}".`)
+    }
+    lineas.push('')
+  }
+  return lineas.join('\n')
+}
+
+function generarScriptExport(motor: MotorExportSql, tablas: TablaDiagrama[], relaciones: RelacionDiagrama[]): { contenido: string; extension: string } {
+  if (motor === 'mysql') return { contenido: generarSqlMySql(tablas, relaciones), extension: 'sql' }
+  if (motor === 'sqlserver') return { contenido: generarSqlServer(tablas, relaciones), extension: 'sql' }
+  return { contenido: generarScriptMongo(tablas, relaciones), extension: 'js' }
+}
+
 const TABLE_WIDTH = 210
 const TABLE_MIN_WIDTH = 160
 const HEADER_HEIGHT = 38
@@ -156,7 +308,7 @@ const DIAGRAMADOR_TOUR = [
   },
   {
     title: 'Exportar, importar y descargar',
-    body: 'Tu diagrama se autoguarda en este navegador. "Exportar/Importar JSON" te deja llevar el modelo a otra sesión o compartirlo; "Descargar PNG" te da una imagen lista para compartir.',
+    body: 'Tu diagrama se autoguarda en este navegador. "Exportar SQL" te da un script de creación real (MySQL, SQL Server o MongoDB, a elección) listo para revisar y ejecutar; "Importar JSON" recupera un modelo guardado antes; "Descargar PNG" te da una imagen lista para compartir.',
     selector: '[data-tour="diagrama-exportar-png"]',
     tipo: 'info' as const,
   },
@@ -173,6 +325,7 @@ export default function DiagramEditorPage() {
   const [error, setError] = useState<string | null>(null)
   const [cargado, setCargado] = useState(false)
   const [zoom, setZoom] = useState<typeof ZOOMS[number]>(100)
+  const [menuExportAbierto, setMenuExportAbierto] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const conectandoRef = useRef<ConexionEnProgreso | null>(null)
@@ -478,20 +631,21 @@ export default function DiagramEditorPage() {
     }
   }, [tablas])
 
-  // ─── Exportar / importar modelo (JSON) ──────────────────────────────────
+  // ─── Exportar script (SQL/Mongo) / importar modelo (JSON) ───────────────
 
-  const exportarJson = useCallback(() => {
+  const exportarSql = useCallback((motor: MotorExportSql) => {
     if (tablas.length === 0) return
-    const payload = JSON.stringify({ tablas, relaciones }, null, 2)
-    const blob = new Blob([payload], { type: 'application/json' })
+    const { contenido, extension } = generarScriptExport(motor, tablas, relaciones)
+    const blob = new Blob([contenido], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.download = `diagrama-${Date.now()}.json`
+    link.download = `diagrama-${motor}-${Date.now()}.${extension}`
     link.href = url
     document.body.appendChild(link)
     link.click()
     link.remove()
     setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    setMenuExportAbierto(false)
   }, [tablas, relaciones])
 
   const abrirSelectorImportar = useCallback(() => fileInputRef.current?.click(), [])
@@ -573,7 +727,39 @@ export default function DiagramEditorPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Button dataTour="diagrama-nueva-tabla" onClick={nuevaTabla} icon={<Plus size={13} />} label="Nueva tabla" primary />
           <Button dataTour="diagrama-limpiar" onClick={limpiarTodo} icon={<Eraser size={13} />} label="Limpiar todo" />
-          <Button onClick={exportarJson} icon={<Download size={13} />} label="Exportar JSON" disabled={tablas.length === 0} />
+          <div className="relative">
+            <Button
+              onClick={() => setMenuExportAbierto(v => !v)}
+              icon={<FileCode2 size={13} />}
+              label="Exportar SQL"
+              disabled={tablas.length === 0}
+            />
+            {menuExportAbierto && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuExportAbierto(false)} />
+                <div className="absolute right-0 mt-1.5 z-20 w-40 rounded-[10px] border border-[#2B2D31] bg-[#18181B] shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+                  <button
+                    onClick={() => exportarSql('mysql')}
+                    className="w-full text-left px-3 py-2 text-[12.5px] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-colors cursor-pointer"
+                  >
+                    MySQL
+                  </button>
+                  <button
+                    onClick={() => exportarSql('sqlserver')}
+                    className="w-full text-left px-3 py-2 text-[12.5px] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-colors cursor-pointer border-t border-[#2B2D31]"
+                  >
+                    SQL Server
+                  </button>
+                  <button
+                    onClick={() => exportarSql('mongo')}
+                    className="w-full text-left px-3 py-2 text-[12.5px] text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1C1C1F] transition-colors cursor-pointer border-t border-[#2B2D31]"
+                  >
+                    MongoDB
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Button onClick={abrirSelectorImportar} icon={<Upload size={13} />} label="Importar JSON" />
           <input ref={fileInputRef} type="file" accept="application/json" onChange={onImportarArchivo} className="hidden" />
           <Button dataTour="diagrama-exportar-png" onClick={descargarComoPng} icon={<Download size={13} />} label="Descargar PNG" loading={exportando} disabled={tablas.length === 0} />
