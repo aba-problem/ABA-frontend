@@ -9,7 +9,7 @@
  *    success, a modal shows the new database credentials including
  *    the one-time `passwordTemporal`.
  *
- * Rate limit: 1 creation per 10 minutes (backend enforced).
+ * Rate limit: 1 creation per 2 minutes (backend enforced).
  * The success modal warns the user to copy the password as it won't
  * be shown again. Closing the modal navigates to the new database's
  * detail page.
@@ -33,7 +33,7 @@ import {
 const NEW_DATABASE_TOUR = [
   {
     title: 'Elegí un motor',
-    body: 'MySQL y SQL Server están disponibles para crear ahora mismo. MongoDB está marcado "Pronto" — todavía no, un tema pendiente con el proveedor externo, no con ABA.',
+    body: 'MySQL, SQL Server y MongoDB están disponibles para crear ahora mismo.',
     selector: '[data-tour="new-db-engines"]',
     tipo: 'info' as const,
   },
@@ -72,19 +72,16 @@ const ENGINES: { value: Motor; label: string; desc: string; color: string; disab
     disabled: false,
   },
   {
-    // 2026-08-14: deshabilitado tras probar la Mongo Provisioning API en vivo —
-    // POST /databases devuelve un connectionString con host "localhost" (no un
-    // host público real), lo que dejaría a cualquier usuario con una base
-    // imposible de conectar desde fuera del proveedor. No es un bug de ABA:
-    // hay que resolverlo con el equipo de esa API antes de reactivar el motor.
-    // Badge "Pronto" (no "En mantenimiento") porque nunca estuvo activo para
-    // usuarios reales — es una función nueva bloqueada, no una pausa.
+    // 2026-08-14: la Mongo Provisioning API devuelve un connectionString con host
+    // "localhost" (bug de su lado, MONGO_PUBLIC_HOST sin configurar) — ABA-backend
+    // ya lo neutraliza sustituyéndolo por el host documentado por contrato
+    // (connection.szapatar.dev), verificado con una conexión Mongo real antes de
+    // reactivar este motor (ver MongoProvisioningService.ExtraerHostYPuerto).
     value: 'MongoDB',
     label: 'MongoDB',
     desc: 'Document-oriented NoSQL database. Great for flexible schemas.',
     color: '#22C55E',
-    disabled: true,
-    badgeText: 'Pronto',
+    disabled: false,
   },
 ]
 
