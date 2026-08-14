@@ -44,6 +44,7 @@ import CelulasSociasPage from './pages/dashboard/CelulasSociasPage'
 import N8nPage from './pages/dashboard/N8nPage'
 import ApiKeysPage from './pages/dashboard/ApiKeysPage'
 import DnsPage from './pages/dashboard/DnsPage'
+import DiagramEditorPage from './pages/dashboard/DiagramEditorPage'
 import type { ReactNode } from 'react'
 
 // ─── Route Guards ──────────────────────────────────────────────────────────
@@ -143,6 +144,10 @@ export default function App() {
             <Route path="n8n" element={<N8nPage />} />
             <Route path="apikeys" element={<ApiKeysPage />} />
             <Route path="dns" element={<DnsPage />} />
+
+            {/* Diagramador ER — 100% client-side, sin dependencia del backend
+                (autoguardado en localStorage, sin endpoint nuevo). */}
+            <Route path="diagramador" element={<DiagramEditorPage />} />
 
             <Route path="sesiones" element={<SessionsPage />} />
             {/* Admin-only — CelulasSociasPage se autogatea con usuario.esAdmin,

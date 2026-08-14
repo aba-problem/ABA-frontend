@@ -27,7 +27,7 @@ import { Badge, type BadgeVariant } from '../../ds/Badge'
 import { SettingsModal } from '../../components/SettingsModal'
 import {
   Database, LayoutDashboard, Plus, LogOut, ChevronLeft, ChevronRight,
-  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, Building2,
+  Settings, ExternalLink, Menu, X, Workflow, KeyRound, Globe, Building2, Network,
 } from 'lucide-react'
 
 /**
@@ -50,6 +50,7 @@ const NAV_ITEMS: {
 }[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Resumen', end: true },
   { to: '/dashboard/databases', icon: Database, label: 'Bases de datos' },
+  { to: '/dashboard/diagramador', icon: Network, label: 'Diagramador' },
   { to: '/dashboard/n8n', icon: Workflow, label: 'Automatización N8N' },
   { to: '/dashboard/apikeys', icon: KeyRound, label: 'IA como Servicio' },
   { to: '/dashboard/dns', icon: Globe, label: 'Subdominios DNS' },
